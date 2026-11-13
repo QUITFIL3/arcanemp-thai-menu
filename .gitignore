@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.local/
+*.dll
+*.pak
+*.ucas
+*.utoc
+*.log
+*.env
+.env*
+thai-menu-backups/
+test-results/
+playwright-report/
+

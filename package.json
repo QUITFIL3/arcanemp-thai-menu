@@ -1,0 +1,21 @@
+{
+  "name": "arcanemp-thai-menu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thai localization patch builder for the ArcaneMP 1.13.0 client menu",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "verify": "node scripts/verify.cjs",
+    "qa": "node scripts/qa.cjs"
+  },
+  "dependencies": {
+    "acorn": "8.19.0",
+    "subset-font": "2.9.0"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0"
+  }
+}

@@ -1,0 +1,203 @@
+Play	เล่น
+Owl Post	ไปรษณีย์นกฮูก
+Settings	การตั้งค่า
+A shared wizarding world	โลกเวทมนตร์ที่ร่วมผจญภัยไปด้วยกัน
+Sections	หมวดหมู่
+Sure?	ยืนยันหรือไม่?
+Quit	ออกจากเกม
+Reach	เชื่อมต่อ
+Verify	ตรวจสอบ
+Files	ไฟล์
+Start	เริ่มระบบ
+Mods	ม็อด
+Enter	เข้าสู่เกม
+Reaching the server	กำลังเชื่อมต่อเซิร์ฟเวอร์
+Waiting for the server to let you in	กำลังรอเซิร์ฟเวอร์อนุญาตให้เข้า
+Checking your version with the server	กำลังตรวจสอบเวอร์ชันกับเซิร์ฟเวอร์
+Downloading the server's files	กำลังดาวน์โหลดไฟล์เซิร์ฟเวอร์
+Starting the server's scripts	กำลังเริ่มสคริปต์เซิร์ฟเวอร์
+Getting the server's mods	กำลังเตรียมม็อดของเซิร์ฟเวอร์
+Entering Hogwarts	กำลังเข้าสู่ฮอกวอตส์
+Joining	กำลังเข้าร่วม
+Progress	ความคืบหน้า
+Couldn't join	เข้าร่วมไม่สำเร็จ
+Returning to the menu...	กำลังกลับสู่เมนู…
+No answer yet. The server may be offline, or its port closed. Still trying.	ยังไม่มีการตอบกลับ เซิร์ฟเวอร์อาจออฟไลน์หรือปิดพอร์ต กำลังลองเชื่อมต่ออีกครั้ง
+ Cancel	 ยกเลิก
+not known	ไม่ทราบ
+The server	เซิร์ฟเวอร์
+You	คุณ
+Server	เซิร์ฟเวอร์
+Back to the castles	กลับไปยังรายชื่อเซิร์ฟเวอร์
+ Try again	 ลองอีกครั้ง
+Copied	คัดลอกแล้ว
+Copy the details for a report	คัดลอกรายละเอียดเพื่อรายงานปัญหา
+Europe	ยุโรป
+North America	อเมริกาเหนือ
+South America	อเมริกาใต้
+Asia	เอเชีย
+Oceania	โอเชียเนีย
+Africa	แอฟริกา
+Unknown	ไม่ทราบ
+Unnamed server	เซิร์ฟเวอร์ไม่มีชื่อ
+Public Beta Begins	เริ่มทดสอบเบตาสาธารณะ
+ArcaneMP enters public beta. Thank you for testing with us - see the full notes for the complete changelog.	ArcaneMP เข้าสู่การทดสอบเบตาสาธารณะ ขอบคุณที่ร่วมทดสอบกับเรา ดูรายการเปลี่ยนแปลงทั้งหมดได้ในบันทึกการอัปเดต
+Closed Beta Begins	เริ่มทดสอบเบตาแบบจำกัด
+ArcaneMP enters closed beta. Thank you for testing with us - see the full notes for the complete changelog.	ArcaneMP เข้าสู่การทดสอบเบตาแบบจำกัด ขอบคุณที่ร่วมทดสอบกับเรา ดูรายการเปลี่ยนแปลงทั้งหมดได้ในบันทึกการอัปเดต
+Gryffindor	กริฟฟินดอร์
+Hufflepuff	ฮัฟเฟิลพัฟ
+Ravenclaw	เรเวนคลอ
+Slytherin	สลิธีริน
+The Castles	รายชื่อเซิร์ฟเวอร์
+Favorites	รายการโปรด
+Recent	ล่าสุด
+just now	เมื่อสักครู่
+No answer from the masterlist.	รายชื่อเซิร์ฟเวอร์ส่วนกลางไม่ตอบกลับ
+The masterlist could not be read.	ไม่สามารถอ่านรายชื่อเซิร์ฟเวอร์ส่วนกลางได้
+That is not an address. Use a host, or host:port.	ที่อยู่ไม่ถูกต้อง โปรดระบุโฮสต์ หรือ โฮสต์:พอร์ต
+Going straight to	เชื่อมต่อโดยตรงไปยัง
+You have chosen	คุณเลือก
+Nothing chosen	ยังไม่ได้เลือก
+Name for this castle	ชื่อเซิร์ฟเวอร์นี้
+Pick a castle	เลือกเซิร์ฟเวอร์
+Not on the masterlist right now	ยังไม่อยู่ในรายชื่อส่วนกลาง
+ port 	 พอร์ต 
+Favorite	รายการโปรด
+Add to favorites	เพิ่มในรายการโปรด
+ Rename	 เปลี่ยนชื่อ
+ Forget	 นำออกจากประวัติ
+ joined 	 เข้าร่วมเมื่อ 
+That castle is full	เซิร์ฟเวอร์เต็ม
+Enter the castle	เข้าสู่เซิร์ฟเวอร์
+or go straight in	หรือเชื่อมต่อโดยตรง
+ Address	 ที่อยู่
+Server address	ที่อยู่เซิร์ฟเวอร์
+ Password	 รหัสผ่าน
+Server password	รหัสผ่านเซิร์ฟเวอร์
+Only if it asks	กรอกเฉพาะเมื่อเซิร์ฟเวอร์กำหนด
+ Wander alone	 เล่นคนเดียว
+Which castles	หมวดรายชื่อเซิร์ฟเวอร์
+ open · 	 เซิร์ฟเวอร์เปิดอยู่ · 
+ inside	 คนออนไลน์
+ of 	 จาก 
+ listed now · 	 อยู่ในรายชื่อตอนนี้ · 
+Search castles	ค้นหาเซิร์ฟเวอร์
+Search by name   /	ค้นหาด้วยชื่อ   /
+Region	ภูมิภาค
+All regions	ทุกภูมิภาค
+Language	ภาษา
+All languages	ทุกภาษา
+Only 	เฉพาะเวอร์ชัน 
+ Refresh	 รีเฟรช
+ The list may be out of date.	 รายชื่อนี้อาจยังไม่เป็นปัจจุบัน
+ Full	 เต็ม
+Unknown version	ไม่ทราบเวอร์ชัน
+Not listed	ไม่อยู่ในรายชื่อ
+Remove from favorites	นำออกจากรายการโปรด
+Nothing matches	ไม่พบรายการที่ตรงกัน
+No favorites yet	ยังไม่มีรายการโปรด
+Nowhere yet	ยังไม่มีประวัติการเข้าร่วม
+Try a different name or address.	ลองใช้ชื่อหรือที่อยู่อื่น
+Star a castle in the list, or one you typed the address of, and it waits for you here.	กดดาวให้เซิร์ฟเวอร์ในรายชื่อหรือเซิร์ฟเวอร์ที่กรอกที่อยู่ไว้ เพื่อบันทึกไว้ที่นี่
+The castles you join show up here, the newest first.	เซิร์ฟเวอร์ที่คุณเข้าร่วมจะแสดงที่นี่ โดยเรียงจากล่าสุด
+Clear the search	ล้างคำค้นหา
+Sending an owl	กำลังค้นหาเซิร์ฟเวอร์
+The owl came back	ค้นหาเซิร์ฟเวอร์ไม่สำเร็จ
+None on your version	ไม่มีเซิร์ฟเวอร์ที่ใช้เวอร์ชันเดียวกับคุณ
+No castles are open	ไม่มีเซิร์ฟเวอร์เปิดอยู่
+Asking the masterlist who is about.	กำลังเรียกดูรายชื่อเซิร์ฟเวอร์ส่วนกลาง
+Try a different name, region or language.	ลองเปลี่ยนชื่อ ภูมิภาค หรือภาษา
+Nobody is publishing a heartbeat. If a friend gave you an address, put it in on the left.	ยังไม่มีเซิร์ฟเวอร์ประกาศสถานะ หากมีที่อยู่เซิร์ฟเวอร์ ให้กรอกทางด้านซ้าย
+Try again	ลองอีกครั้ง
+Clear the filters	ล้างตัวกรอง
+Show them anyway	แสดงทั้งหมด
+ choose	 เลือก
+ go	 เข้าร่วม
+ search	 ค้นหา
+ Owl Post	 ไปรษณีย์นกฮูก
+Voice	แชตเสียง
+Audio	เสียงเกม
+Graphics	กราฟิก
+About	เกี่ยวกับ
+Session	การเชื่อมต่อ
+Settings sections	หมวดการตั้งค่า
+Voice chat	แชตเสียง
+Off closes your microphone and stops other players' voices reaching you.	เมื่อปิด จะปิดไมโครโฟนของคุณและหยุดรับเสียงจากผู้เล่นอื่น
+Microphone	ไมโครโฟน
+System default	ค่าเริ่มต้นของระบบ
+ (not connected)	 (ไม่ได้เชื่อมต่อ)
+Input level	ระดับเสียงไมโครโฟน
+Speech has to cross the line to be sent.	เสียงต้องดังเกินเส้นที่กำหนดจึงจะส่งออกไป
+Join a server to test your microphone.	เข้าร่วมเซิร์ฟเวอร์เพื่อทดสอบไมโครโฟน
+Transmit	การส่งเสียง
+Transmit mode	โหมดส่งเสียง
+Push to talk	กดเพื่อพูด
+Voice activation	ส่งเสียงอัตโนมัติ
+Push-to-talk key	ปุ่มกดเพื่อพูด
+Press the key you want. Escape cancels.	กดปุ่มที่ต้องการใช้ หรือกด Esc เพื่อยกเลิก
+ Change	 เปลี่ยนปุ่ม
+Release delay	หน่วงเวลาหลังปล่อยปุ่ม
+Keeps sending briefly after you let go, so the last word is not cut.	ส่งเสียงต่ออีกเล็กน้อยหลังปล่อยปุ่ม เพื่อไม่ให้คำสุดท้ายถูกตัด
+Activation level	ระดับเริ่มส่งเสียง
+Lower picks up quieter speech, and more of the room with it.	ค่ายิ่งต่ำจะรับเสียงพูดที่เบาได้ดีขึ้น แต่จะรับเสียงรอบข้างเพิ่มด้วย
+Noise suppression	ลดเสียงรบกวน
+Filters out background noise, at a small cost to how some voices sound.	กรองเสียงรบกวนรอบข้าง แต่อาจทำให้เสียงพูดเปลี่ยนไปเล็กน้อย
+Voice chat volume	ระดับเสียงผู้เล่นอื่น
+How loud other players are.	ความดังของเสียงจากผู้เล่นอื่น
+ Reset voice settings	 คืนค่าการตั้งค่าแชตเสียง
+Effects	เอฟเฟกต์เสียง
+Music	ดนตรี
+Dialogue	บทสนทนา
+The game's characters, not voice chat.	เสียงพูดของตัวละครในเกม แยกจากแชตเสียงของผู้เล่น
+Mute all game sound	ปิดเสียงเกมทั้งหมด
+Mono audio	เสียงโมโน
+Subtitles	คำบรรยาย
+Menu narration	เสียงอ่านเมนู
+Menu narration volume	ระดับเสียงอ่านเมนู
+ The game's own settings: changing them here is the same as changing them in the game's menu.	 การเปลี่ยนค่าที่นี่จะเปลี่ยนการตั้งค่าของตัวเกมด้วย
+The game has not loaded its settings yet.	ตัวเกมยังโหลดการตั้งค่าไม่เสร็จ
+Low	ต่ำ
+Medium	ปานกลาง
+High	สูง
+Max	สูงสุด
+Crowd detail	รายละเอียดผู้เล่นในฝูงชน
+How many players keep full detail in a crowd. Past it the game coarsens the least important ones, which warps faces. Lower it if big crowds cost too many frames.	จำนวนผู้เล่นที่แสดงรายละเอียดเต็มในฝูงชน เมื่อเกินจำนวนนี้ เกมจะลดรายละเอียดตัวละครที่สำคัญน้อยกว่าและใบหน้าอาจผิดรูป ลดค่านี้หากเฟรมเรตตกเมื่อมีผู้เล่นมาก
+Crowd memory	หน่วยความจำสำหรับฝูงชน
+Video memory for animated characters. Raise it if players lose clothes, hair or heads in big crowds; lower it on a card short of memory.	หน่วยความจำการ์ดจอสำหรับตัวละครเคลื่อนไหว เพิ่มค่าหากเสื้อผ้า ผม หรือศีรษะผู้เล่นหายเมื่อมีคนมาก ลดค่าหากการ์ดจอมีหน่วยความจำน้อย
+ Reset graphics settings	 คืนค่าการตั้งค่ากราฟิก
+ The rest of the graphics options are in the game's own settings, in the escape menu.	 ตัวเลือกกราฟิกอื่นอยู่ในการตั้งค่าของตัวเกม กด Esc เพื่อเปิดเมนู
+Ping	ปิง
+Logs	บันทึกระบบ
+ Open logs folder	 เปิดโฟลเดอร์บันทึกระบบ
+Copy details	คัดลอกรายละเอียด
+ Attach the newest log from the logs folder when you report a problem.	 แนบไฟล์บันทึกล่าสุดจากโฟลเดอร์บันทึกระบบเมื่อต้องการรายงานปัญหา
+Disconnect	ออกจากเซิร์ฟเวอร์
+Leave this server and go back to the server list.	ออกจากเซิร์ฟเวอร์นี้และกลับไปยังรายชื่อเซิร์ฟเวอร์
+Return to the main menu	กลับสู่เมนูหลัก
+Leave offline mode and go back to the server list.	ออกจากโหมดเล่นคนเดียวและกลับไปยังรายชื่อเซิร์ฟเวอร์
+Quit the game	ออกจากเกม
+Close Hogwarts Legacy.	ปิดเกม Hogwarts Legacy
+this server	เซิร์ฟเวอร์นี้
+Favorite this server	เพิ่มเซิร์ฟเวอร์นี้ในรายการโปรด
+ Yes, 	 ยืนยัน: 
+Cancel	ยกเลิก
+ Your name	 ชื่อของคุณ
+What the others see above your head and in the chat. Remembered between sessions.	ชื่อที่ผู้เล่นอื่นเห็นเหนือศีรษะและในแชต ระบบจะจดจำชื่อนี้ไว้
+Your linked Discord account supplies the name you play under, so it cannot be changed here.	ชื่อผู้เล่นมาจากบัญชี Discord ที่เชื่อมโยงไว้ จึงเปลี่ยนชื่อที่นี่ไม่ได้
+ Name	 ชื่อ
+Nickname	ชื่อผู้เล่น
+Save	บันทึก
+Saved	บันทึกแล้ว
+Up to 32 characters.	สูงสุด 32 ตัวอักษร
+In a castle, F9 brings these settings up over the game.	ขณะเล่น กด F9 เพื่อเปิดการตั้งค่านี้
+ArcaneMP settings	การตั้งค่า ArcaneMP
+ or 	 หรือ 
+ to close	 เพื่อปิด
+Close	ปิด
+Settings saved.	บันทึกการตั้งค่าแล้ว
+Could not connect to the server.	ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้
+as 	เล่นในชื่อ 
+double-click a castle to go straight in	ดับเบิลคลิกเซิร์ฟเวอร์เพื่อเข้าร่วมทันที
+UPDATE	อัปเดต
+runs	ใช้
+run	ใช้
