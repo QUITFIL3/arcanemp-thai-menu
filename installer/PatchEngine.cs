@@ -22,6 +22,8 @@ namespace ArcaneThai
         public bool IsInstalled;
         public bool HasPreviousThaiPatch;
         public bool CanRestore;
+        public bool NeedsRefresh;
+        public string LocalizedPath;
         internal string Html;
     }
 
@@ -35,6 +37,8 @@ namespace ArcaneThai
         public string FileVersionAfter;
         public bool Changed;
         public bool OutsideMenuUnchanged;
+        public bool OfficialFileUnchanged;
+        public string LocalizedPath;
         public string Message;
     }
 
@@ -57,6 +61,8 @@ namespace ArcaneThai
         private const string StartMarker = "<!-- arcane-thai-menu:runtime-v2:start -->";
         private const string EndMarker = "<!-- arcane-thai-menu:runtime-v2:end -->";
         private const int MaxHtmlBytes = 16 * 1024 * 1024;
+        private const string ThaiDll = "ArcaneMPClient.Thai.dll";
+        private const string StateFile = "arcane-thai-menu.json";
         private static readonly Encoding StrictUtf8 = new UTF8Encoding(false, true);
         private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = MaxHtmlBytes };
 
@@ -79,61 +85,122 @@ namespace ArcaneThai
             byte[] bytes = ReadClient(target);
             MenuBlock block = LocateMenu(bytes);
             string sha = Hash(bytes);
+            string directory = System.IO.Path.GetDirectoryName(target);
+            string localized = System.IO.Path.Combine(directory, ThaiDll);
+            var state = ReadState(directory);
+            var config = ReadConfig(directory);
+            bool selectedThai = Value(config, "mod_dll_name") == ThaiDll;
+            bool installed = false;
+            if (state != null && selectedThai && File.Exists(localized)) {
+                byte[] translated = ReadClient(localized);
+                installed = Value(state, "sourceSha256") == sha && Value(state, "localizedSha256") == Hash(translated)
+                    && LocateMenu(translated).Html.Contains(CatalogStamp());
+            }
             return new Inspection {
                 TargetPath = target, Sha256 = sha, FileVersion = VersionOf(target),
                 MenuOffset = block.Offset, MenuLength = block.Length, Html = block.Html,
-                IsInstalled = block.Html.Contains(CatalogStamp()),
+                IsInstalled = installed, LocalizedPath = localized,
+                NeedsRefresh = state != null && !installed,
                 HasPreviousThaiPatch = block.Html.Contains("lang=\"th\"") || block.Html.Contains(StartMarker),
-                CanRestore = FindBackup(target, sha) != null
+                CanRestore = (state != null && selectedThai) || FindBackup(target, sha) != null
             };
         }
 
         public static OperationResult Install(string selected)
         {
             string target = ResolveTarget(selected);
+            AssertLauncherClosed(target);
             AssertWritableAndClosed(target);
             byte[] original = ReadClient(target);
             string before = Hash(original);
             string versionBefore = VersionOf(target);
-            MenuBlock block = LocateMenu(original);
-            if (block.Html.Contains(CatalogStamp())) return new OperationResult {
+            string directory = System.IO.Path.GetDirectoryName(target);
+            string localized = System.IO.Path.Combine(directory, ThaiDll);
+            var config = ReadConfig(directory);
+            var previousState = ReadState(directory);
+            if (File.Exists(localized) && previousState == null)
+                throw new InvalidOperationException("มีไฟล์ ArcaneMPClient.Thai.dll อยู่แล้วแต่ไม่พบข้อมูลการติดตั้ง จึงไม่เขียนทับไฟล์นั้น");
+            string modName = Value(config, "mod_dll_name");
+            if (modName != "" && modName != "ArcaneMPClient.dll" && modName != ThaiDll)
+                throw new InvalidOperationException("Launcher กำลังใช้ DLL ของมอดอื่น โปรดคืนค่ามอดนั้นก่อนติดตั้งภาษาไทย");
+            if (modName == ThaiDll && previousState == null)
+                throw new InvalidOperationException("ไม่พบข้อมูลการติดตั้งเดิม จึงยังเปลี่ยนการตั้งค่า Launcher ไม่ได้");
+            byte[] source = OfficialSource(target, original);
+            string sourceHash = Hash(source);
+            MenuBlock block = LocateMenu(source);
+            if (Inspect(target).IsInstalled) return new OperationResult {
                 TargetPath = target, BeforeSha256 = before, AfterSha256 = before,
                 FileVersionBefore = versionBefore, FileVersionAfter = versionBefore,
-                Changed = false, OutsideMenuUnchanged = true, Message = "ติดตั้งภาษาไทยชุดนี้ไว้แล้ว"
+                Changed = false, OutsideMenuUnchanged = true, OfficialFileUnchanged = true,
+                LocalizedPath = localized, Message = "ติดตั้งภาษาไทยชุดนี้ไว้แล้ว"
             };
 
             string html = LocalizeHtml(block.Html);
             byte[] payload = BuildPayload(html, block.Length);
-            byte[] patched = (byte[])original.Clone();
+            byte[] patched = (byte[])source.Clone();
             Buffer.BlockCopy(payload, 0, patched, block.Offset, payload.Length);
-            AssertOutsideUnchanged(original, patched, block);
+            AssertOutsideUnchanged(source, patched, block);
             string after = Hash(patched);
             string backupDirectory = NewBackupDirectory(target);
             string backupFile = System.IO.Path.Combine(backupDirectory, "ArcaneMPClient.dll");
             var record = new Dictionary<string, object> {
-                { "originalSha256", before }, { "patchedSha256", after },
-                { "createdUtc", DateTime.UtcNow.ToString("o") }, { "originalFileVersion", versionBefore },
-                { "offset", block.Offset }, { "length", block.Length }, { "installerVersion", "0.2.0" }
+                { "sourceSha256", sourceHash }, { "localizedSha256", after },
+                { "createdUtc", DateTime.UtcNow.ToString("o") }, { "installerVersion", "0.3.0" },
+                { "hadModDllName", previousState == null ? config.ContainsKey("mod_dll_name") : previousState["hadModDllName"] },
+                { "originalModDllName", previousState == null ? modName : previousState["originalModDllName"] }
             };
-            File.WriteAllText(System.IO.Path.Combine(backupDirectory, "installer-backup.json"), Json.Serialize(record), new UTF8Encoding(false));
-            ReplaceWithBackup(target, original, patched, backupFile);
+            config["mod_dll_name"] = ThaiDll;
+            var changes = new List<FileChange>();
+            if (before != sourceHash) changes.Add(new FileChange(target, source));
+            changes.Add(new FileChange(localized, patched));
+            changes.Add(new FileChange(System.IO.Path.Combine(directory, StateFile), JsonBytes(record)));
+            changes.Add(new FileChange(System.IO.Path.Combine(directory, "ArcaneMP_launcher.json"), JsonBytes(config)));
+            File.WriteAllBytes(backupFile, original);
+            ApplyChanges(changes, backupDirectory);
+            if (Hash(File.ReadAllBytes(target)) != sourceHash) throw new IOException("ตรวจ DLL ทางการหลังติดตั้งไม่ผ่าน");
             string versionAfter = VersionOf(target);
             if (!String.Equals(versionBefore, versionAfter, StringComparison.Ordinal))
                 throw new IOException("ข้อมูลเวอร์ชันเปลี่ยนไป โปรดคืนค่าจากไฟล์สำรอง: " + backupFile);
             return new OperationResult {
-                TargetPath = target, BackupPath = backupFile, BeforeSha256 = before, AfterSha256 = after,
+                TargetPath = target, BackupPath = backupFile, BeforeSha256 = before, AfterSha256 = sourceHash,
                 FileVersionBefore = versionBefore, FileVersionAfter = versionAfter,
-                Changed = true, OutsideMenuUnchanged = true,
-                Message = "ติดตั้งภาษาไทยแล้ว เปิด ArcaneMP ใหม่เพื่อใช้งาน"
+                Changed = true, OutsideMenuUnchanged = true, OfficialFileUnchanged = before == sourceHash,
+                LocalizedPath = localized,
+                Message = "ติดตั้งภาษาไทยแยกจาก DLL ทางการแล้ว เปิด ArcaneMP ใหม่ได้"
             };
         }
 
         public static OperationResult Restore(string selected)
         {
             string target = ResolveTarget(selected);
+            AssertLauncherClosed(target);
             AssertWritableAndClosed(target);
             byte[] current = ReadClient(target);
             string before = Hash(current);
+            string directory = System.IO.Path.GetDirectoryName(target);
+            var state = ReadState(directory);
+            var config = ReadConfig(directory);
+            if (state != null) {
+                if (Value(config, "mod_dll_name") != ThaiDll)
+                    throw new InvalidOperationException("การตั้งค่า Launcher ถูกเปลี่ยนหลังติดตั้ง จึงไม่เขียนทับการตั้งค่าปัจจุบัน");
+                if (Convert.ToBoolean(state["hadModDllName"])) config["mod_dll_name"] = state["originalModDllName"];
+                else config.Remove("mod_dll_name");
+                string backupDirectory = NewBackupDirectory(target);
+                string localized = System.IO.Path.Combine(directory, ThaiDll);
+                var changes = new List<FileChange> {
+                    new FileChange(System.IO.Path.Combine(directory, "ArcaneMP_launcher.json"), JsonBytes(config)),
+                    new FileChange(System.IO.Path.Combine(directory, StateFile), null)
+                };
+                if (File.Exists(localized)) changes.Add(new FileChange(localized, null));
+                ApplyChanges(changes, backupDirectory);
+                return new OperationResult {
+                    TargetPath = target, BackupPath = System.IO.Path.Combine(backupDirectory, "ArcaneMP_launcher.json"),
+                    BeforeSha256 = before, AfterSha256 = Hash(File.ReadAllBytes(target)),
+                    FileVersionBefore = VersionOf(target), FileVersionAfter = VersionOf(target),
+                    Changed = true, OutsideMenuUnchanged = true, OfficialFileUnchanged = true,
+                    Message = "คืนการตั้งค่า Launcher แล้ว โดยเก็บ DLL ทางการไว้เหมือนเดิม"
+                };
+            }
             Backup backup = FindBackup(target, before);
             if (backup == null) throw new InvalidOperationException("ไม่พบไฟล์สำรองที่ตรงกับไฟล์ปัจจุบัน จึงยังคืนค่าไม่ได้");
             byte[] original = File.ReadAllBytes(backup.Path);
@@ -146,6 +213,140 @@ namespace ArcaneThai
                 AfterSha256 = Hash(original), FileVersionBefore = versionBefore, FileVersionAfter = VersionOf(target),
                 Changed = true, OutsideMenuUnchanged = true, Message = "คืนไฟล์ก่อนติดตั้งแล้ว เปิด ArcaneMP ใหม่เพื่อใช้งาน"
             };
+        }
+
+        private sealed class FileChange
+        {
+            public string Path;
+            public byte[] Before;
+            public byte[] After;
+            public FileChange(string path, byte[] after) { Path = path; After = after; }
+        }
+
+        private static string Value(Dictionary<string, object> data, string key)
+        {
+            object value;
+            return data != null && data.TryGetValue(key, out value) ? Convert.ToString(value) : "";
+        }
+
+        private static byte[] JsonBytes(object value) { return StrictUtf8.GetBytes(Json.Serialize(value)); }
+
+        private static Dictionary<string, object> ReadConfig(string directory)
+        {
+            string path = System.IO.Path.Combine(directory, "ArcaneMP_launcher.json");
+            if (!File.Exists(path)) return new Dictionary<string, object>();
+            var config = Json.Deserialize<Dictionary<string, object>>(File.ReadAllText(path));
+            if (config == null) throw new InvalidDataException("อ่านการตั้งค่า Launcher ไม่สำเร็จ");
+            return config;
+        }
+
+        private static Dictionary<string, object> ReadState(string directory)
+        {
+            string path = System.IO.Path.Combine(directory, StateFile);
+            if (!File.Exists(path)) return null;
+            var state = Json.Deserialize<Dictionary<string, object>>(File.ReadAllText(path));
+            if (state == null || !Regex.IsMatch(Value(state, "sourceSha256"), "^[a-f0-9]{64}$")
+                || !Regex.IsMatch(Value(state, "localizedSha256"), "^[a-f0-9]{64}$")
+                || !state.ContainsKey("hadModDllName") || !(state["hadModDllName"] is bool)
+                || !state.ContainsKey("originalModDllName")
+                || (Value(state, "originalModDllName") != "" && Value(state, "originalModDllName") != "ArcaneMPClient.dll"))
+                throw new InvalidDataException("ข้อมูลการติดตั้งภาษาไทยไม่ถูกต้อง โปรดตรวจไฟล์สำรองก่อนทำต่อ");
+            return state;
+        }
+
+        private static byte[] OfficialSource(string target, byte[] current)
+        {
+            string directory = System.IO.Path.GetDirectoryName(target);
+            string manifest = System.IO.Path.Combine(directory, ".mafiahub", "build-manifest.json");
+            string expected = "";
+            if (File.Exists(manifest)) {
+                var data = Json.Deserialize<Dictionary<string, object>>(File.ReadAllText(manifest));
+                object entries;
+                if (data == null || !data.TryGetValue("files", out entries) || !(entries is System.Collections.IEnumerable))
+                    throw new InvalidDataException("อ่านรายการไฟล์ของตัวอัปเดตไม่สำเร็จ โปรดเปิด Launcher ให้อัปเดตเสร็จก่อน");
+                foreach (object entry in (System.Collections.IEnumerable)entries) {
+                    var file = entry as Dictionary<string, object>;
+                    if (Value(file, "path").Replace('\\', '/') == "ArcaneMPClient.dll") expected = Value(file, "sha256").ToLowerInvariant();
+                }
+                if (!Regex.IsMatch(expected, "^[a-f0-9]{64}$"))
+                    throw new InvalidDataException("ไม่พบ checksum ของ DLL ทางการในรายการไฟล์อัปเดต");
+            }
+            string currentHash = Hash(current);
+            MenuBlock currentBlock = LocateMenu(current);
+            bool oldThai = currentBlock.Html.Contains(StartMarker) || currentBlock.Html.Contains("lang=\"th\"");
+            if ((expected != "" && currentHash == expected) || (expected == "" && !oldThai)) return current;
+            if (!oldThai) throw new InvalidOperationException("DLL ปัจจุบันไม่ตรงกับรายการอัปเดต โปรดเปิด Launcher ให้อัปเดตเสร็จก่อนติดตั้งภาษาไทย");
+
+            byte[] source = null;
+            string root = System.IO.Path.Combine(directory, "thai-menu-backups");
+            if (expected != "" && Directory.Exists(root)) {
+                foreach (string backupDirectory in Directory.GetDirectories(root).OrderByDescending(value => value)) {
+                    string path = System.IO.Path.Combine(backupDirectory, "ArcaneMPClient.dll");
+                    if (!File.Exists(path)) continue;
+                    byte[] candidate = ReadClient(path);
+                    if (Hash(candidate) == expected) { source = candidate; break; }
+                }
+            } else if (expected == "") {
+                byte[] candidate = current;
+                for (int depth = 0; depth < 12; depth++) {
+                    Backup backup = FindBackup(target, Hash(candidate));
+                    if (backup == null) break;
+                    candidate = ReadClient(backup.Path);
+                    string html = LocateMenu(candidate).Html;
+                    if (!html.Contains(StartMarker) && !html.Contains("lang=\"th\"")) { source = candidate; break; }
+                }
+            }
+            if (source == null) throw new InvalidOperationException("พบแพตช์ภาษาไทยแบบเก่า แต่ไม่พบ DLL ทางการที่ตรงกัน โปรดให้ Launcher อัปเดต/ซ่อมไฟล์ก่อน แล้วติดตั้งใหม่ด้วย EXE นี้");
+            MenuBlock sourceBlock = LocateMenu(source);
+            if (sourceBlock.Offset != currentBlock.Offset || sourceBlock.Length != currentBlock.Length)
+                throw new InvalidDataException("ไฟล์สำรองมีโครงสร้างต่างจากไฟล์ปัจจุบัน จึงยังคืน DLL ทางการไม่ได้");
+            AssertOutsideUnchanged(source, current, sourceBlock);
+            return source;
+        }
+
+        private static bool Same(byte[] left, byte[] right)
+        {
+            return left == null ? right == null : right != null && Hash(left) == Hash(right);
+        }
+
+        private static byte[] ReadOptional(string path) { return File.Exists(path) ? File.ReadAllBytes(path) : null; }
+
+        private static void ApplyChanges(List<FileChange> changes, string backupDirectory)
+        {
+            foreach (FileChange change in changes) {
+                if (File.Exists(change.Path)) AssertWritableAndClosed(change.Path);
+                change.Before = ReadOptional(change.Path);
+                if (change.Before != null) File.WriteAllBytes(System.IO.Path.Combine(backupDirectory, System.IO.Path.GetFileName(change.Path)), change.Before);
+            }
+            var applied = new List<FileChange>();
+            try {
+                foreach (FileChange change in changes) {
+                    if (!Same(ReadOptional(change.Path), change.Before)) throw new IOException("ไฟล์ถูกแก้ไขระหว่างทำงาน โปรดตรวจไฟล์อีกครั้ง");
+                    WriteAtomic(change.Path, change.After);
+                    applied.Add(change);
+                    if (!Same(ReadOptional(change.Path), change.After)) throw new IOException("ตรวจไฟล์หลังบันทึกไม่ผ่าน");
+                }
+            } catch {
+                applied.Reverse();
+                foreach (FileChange change in applied) {
+                    if (!Same(ReadOptional(change.Path), change.After)) throw new IOException("มีโปรแกรมอื่นแก้ไฟล์ระหว่างคืนค่า โปรดใช้ไฟล์สำรองใน " + backupDirectory);
+                    WriteAtomic(change.Path, change.Before);
+                }
+                throw;
+            }
+        }
+
+        private static void WriteAtomic(string path, byte[] bytes)
+        {
+            if (bytes == null) { if (File.Exists(path)) File.Delete(path); return; }
+            string stage = path + "." + Guid.NewGuid().ToString("N") + ".arcane-thai-stage";
+            try {
+                using (var stream = new FileStream(stage, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+                    stream.Write(bytes, 0, bytes.Length); stream.Flush(true);
+                }
+                if (File.Exists(path)) File.Replace(stage, path, null, true);
+                else File.Move(stage, path);
+            } finally { if (File.Exists(stage)) File.Delete(stage); }
         }
 
         private static byte[] ReadClient(string target)
@@ -283,6 +484,21 @@ namespace ArcaneThai
             for (int index = 0; index < before.Length; index++) {
                 if (index >= block.Offset && index < block.Offset + block.Length) continue;
                 if (before[index] != after[index]) throw new InvalidDataException("Bytes outside the menu were changed.");
+            }
+        }
+
+        private static void AssertLauncherClosed(string target)
+        {
+            string launcher = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(target), "ArcaneMPLauncher.exe");
+            foreach (Process process in Process.GetProcessesByName("ArcaneMPLauncher")) {
+                using (process) {
+                    string path;
+                    try { path = process.MainModule.FileName; }
+                    catch (System.ComponentModel.Win32Exception) { continue; }
+                    catch (InvalidOperationException) { continue; }
+                    if (String.Equals(System.IO.Path.GetFullPath(path), launcher, StringComparison.OrdinalIgnoreCase))
+                        throw new IOException("Launcher ของตำแหน่งนี้ยังเปิดอยู่ โปรดปิด Hogwarts Legacy และ ArcaneMP ก่อนติดตั้งหรือคืนค่า");
+                }
             }
         }
 

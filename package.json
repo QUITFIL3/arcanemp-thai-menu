@@ -1,6 +1,6 @@
 {
   "name": "arcanemp-thai-menu",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Portable Windows Thai menu installer for structurally compatible ArcaneMP clients",
   "engines": {
