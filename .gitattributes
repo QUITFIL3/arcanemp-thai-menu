@@ -1,8 +1,11 @@
 * text=auto
 *.cjs text eol=lf
+*.cs text eol=lf
+*.js text eol=lf
 *.tsv text eol=lf
 *.md text eol=lf
 *.ps1 text eol=crlf
 *.ttf binary
+*.woff2 binary
 *.png binary
 

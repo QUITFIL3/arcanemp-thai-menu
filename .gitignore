@@ -2,6 +2,9 @@ node_modules/
 dist/
 .local/
 *.dll
+*.exe
+*.pdb
+*.arcane-thai-stage
 *.pak
 *.ucas
 *.utoc

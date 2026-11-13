@@ -1,91 +1,93 @@
-# ArcaneMP Thai Menu
+# ArcaneMP Thai Menu Installer
 
-แพตช์ภาษาไทยสำหรับเมนูไคลเอนต์ **ArcaneMP 1.13.0 (`b66abf3`)** แปลเมนูเล่น ไปรษณีย์นกฮูก การตั้งค่าแชตเสียง เสียงเกม กราฟิก และเกี่ยวกับ พร้อมฟอนต์ไทยที่รองรับสระและวรรณยุกต์
+ตัวติดตั้งภาษาไทยแบบ **EXE ไฟล์เดียว** สำหรับเมนูไคลเอนต์ ArcaneMP เลือกโฟลเดอร์ client หรือเลือก `ArcaneMPClient.dll` / `ArcaneMPLauncher.exe` แล้วกดติดตั้งได้เลย ไม่ต้องติดตั้ง Node.js หรือใช้ PowerShell สำหรับการใช้งานปกติ
 
-![ตัวอย่างการตั้งค่าแชตเสียง](docs/preview-voice.png)
+![ตัวติดตั้งภาษาไทย](docs/installer-preview.png)
 
-## สถานะ
+## ดาวน์โหลดและใช้งาน
 
-- แปลข้อความ 241 ตำแหน่ง รวมข้อความใน template
-- ทดสอบการแสดงผลทั้ง 4 หมวดการตั้งค่าใน Chromium และการเลื่อนดูปุ่มทั้งหมดที่ 1280×720 ผ่าน
-- ทดสอบการส่งค่าปุ่มตั้งค่าแล้ว รหัส `settings:set` และ `voice.noiseSuppression` คงเดิม
-- ทดสอบตัวติดตั้ง การติดตั้งซ้ำ และการคืน DLL เดิมผ่าน
-- **ยังไม่ได้ติดตั้งหรือยืนยันผลภายในเกมจริง** ภาพตัวอย่างมาจากการทดสอบหน้าเมนูใน Chromium
+ดาวน์โหลด **ArcaneThaiInstaller.exe** จาก [Releases](https://github.com/QUITFIL3/arcanemp-thai-menu/releases/latest)
 
-ชุดนี้แปลหน้าเมนูที่ฝังอยู่ใน `ArcaneMPClient.dll` ส่วนเควสต์ บทบรรยาย และเมนูเซิร์ฟเวอร์เป็นแพ็กแยกกัน ข้อความตอบกลับที่ส่งมาจากเซิร์ฟเวอร์และข้อความบางส่วนที่สร้างจากโค้ด native อาจยังเป็นอังกฤษ
+1. ปิด Hogwarts Legacy และ ArcaneMP
+2. เปิด `ArcaneThaiInstaller.exe`
+3. กด **เลือกโฟลเดอร์...** หรือ **เลือกไฟล์...** แล้วเลือกตำแหน่งไคลเอนต์
+4. เมื่อขึ้น **พร้อมติดตั้งภาษาไทย** ให้กด **ติดตั้งภาษาไทย**
+5. เปิดเกมผ่าน ArcaneMP ใหม่
 
-## สร้างแพตช์
+ถ้าต้องการย้อนกลับ ให้เลือกตำแหน่งเดิมแล้วกด **คืนค่าเดิม** ตัวติดตั้งจะหาไฟล์สำรองที่มี checksum ตรงกับไฟล์ปัจจุบัน หากมีแพตช์อื่นอยู่ก่อน การคืนค่าจะกลับไปยังสภาพก่อนติดตั้งครั้งนั้น
 
-ต้องมี Node.js 22 ขึ้นไป และไคลเอนต์ ArcaneMP รุ่นที่รองรับอยู่ในเครื่อง
+ใช้งานบน Windows 10/11 x64 ที่มี .NET Framework 4.8
+
+## เวอร์ชันโปรแกรมเดิม
+
+ตัวติดตั้ง **ไม่อัปเกรดหรือดาวน์เกรด ArcaneMP และไม่เปลี่ยนข้อมูลเวอร์ชันของ client**
+
+- ตรวจหา HTML ของเมนูจากไฟล์ที่เลือกจริง ไม่มีตารางเลขเวอร์ชัน, SHA-256 หรือตำแหน่งไบต์ตายตัวสำหรับอนุญาตการติดตั้ง
+- เพิ่มคำแปลและฟอนต์ในหน้าเมนู โดยรักษา JavaScript ของแอปเดิมไว้
+- รักษาขนาด DLL และข้อมูลนอกส่วน HTML ทุกไบต์
+- เก็บไฟล์ก่อนติดตั้งไว้ใน `client\thai-menu-backups\<เวลา>\ArcaneMPClient.dll`
+- อ่านได้ทั้งเมนู HTML เดิมและแพตช์แบบบีบอัดจากชุดก่อน
+
+การรองรับขึ้นกับ **โครงสร้างเมนู** จึงยังไม่รับรองทุกเวอร์ชันในอนาคต หากอ่านโครงสร้างไม่ได้ พบเมนูกำกวม หรือมีพื้นที่ไม่พอ จะหยุดโดยไม่แก้ไฟล์ การอัปเดตจากผู้พัฒนา ArcaneMP อาจคืน DLL ทางการและต้องติดตั้งภาษาไทยอีกครั้ง
+
+## ภาษาไทยครอบคลุมอะไร
+
+เมนูเล่น ไปรษณีย์นกฮูก การตั้งค่าแชตเสียง เสียงเกม กราฟิก และเกี่ยวกับ พร้อมฟอนต์ที่รองรับสระและวรรณยุกต์ แปลข้อความบนหน้าจอโดยรักษารหัส event และค่าของปุ่มไว้
+
+![ตัวอย่างเมนู](docs/preview-voice.png)
+
+ชื่ออุปกรณ์ ชื่อเซิร์ฟเวอร์ ข้อมูลที่ผู้เล่นกรอก และข้อความใหม่ที่ยังไม่มีคำแปลอาจยังแสดงอังกฤษ ชุดนี้แปลหน้าเมนู client; เควสต์ บทบรรยาย และเมนูเซิร์ฟเวอร์เป็นแพ็กแยกกัน
+
+## การทดสอบ
+
+- ทดสอบติดตั้งซ้ำ คืนค่า checksum ไฟล์สำรอง และการปฏิเสธไฟล์ที่ล็อกหรือพื้นที่ไม่พอ
+- ทดสอบกับ PE libraries จำลองที่มี file-version resources `9.8.7.6` และ `7.6.5.4` และตำแหน่งเมนูต่างกัน ยืนยันเวอร์ชัน ขนาด และข้อมูลนอกเมนูไม่เปลี่ยน
+- ทดสอบกับสำเนา DLL จริงของ ArcaneMP และสำเนาแพตช์รุ่นก่อน
+- ตรวจเมนูที่ได้จาก EXE ด้วย Chromium ทั้ง 4 หมวด รวมฟอนต์ การเลื่อนที่ 1280×720 การสลับโหมดพูด และค่าที่ส่งผ่าน native bridge
+- **ยังไม่ได้ยืนยันการทำงานของแพตช์รุ่น EXE ภายในเกมจริง** ภาพเมนูมาจาก Chromium ส่วนภาพตัวติดตั้งเรนเดอร์จาก WinForms
+
+## สร้าง EXE จากซอร์ส
+
+ใช้ C# compiler ของ .NET Framework บน Windows ไม่ต้องติดตั้ง npm dependencies เพื่อสร้าง EXE:
+
+```powershell
+.\scripts\build-installer.ps1
+```
+
+ผลลัพธ์คือ `dist\ArcaneThaiInstaller.exe` ซึ่งฝังคำแปล ฟอนต์ และใบอนุญาตไว้แล้ว ใช้ไฟล์เดียวได้
+
+สำหรับทดสอบ engine ให้ส่ง DLL ของคุณเอง โดยทดสอบกับสำเนาภายใน `.local/`:
+
+```powershell
+.\tests\installer.ps1 -ClientDll "D:\ArcaneMP\client\ArcaneMPClient.dll"
+npm ci
+npx playwright install chromium
+npm run qa:installer
+```
+
+คำสั่งวิเคราะห์โดยไม่ติดตั้ง:
+
+```powershell
+.\dist\ArcaneThaiInstaller.exe --inspect "D:\ArcaneMP\client" ".\inspection.json"
+```
+
+## สคริปต์แพตช์รุ่นแรก
+
+ยังเก็บ builder เดิมที่ผูกกับ DLL 1.13.0 ไว้สำหรับอ้างอิง:
 
 ```powershell
 npm ci
-npm run build -- --client "F:\ArcaneMP-1.12.2\client"
+npm run build:legacy -- --client "D:\ArcaneMP\client"
 npm run verify
-```
-
-ชื่อโฟลเดอร์ client ไม่ได้ใช้ระบุเวอร์ชัน สคริปต์ตรวจ SHA-256 ของ DLL จริง และจะหยุดหากเป็นรุ่นอื่นหรือมีการแก้ไขมาก่อน
-
-SHA-256 ของ DLL ต้นฉบับที่รองรับ:
-
-```text
-15aec613550d2017293416300d514dace14b3cad5ca76a0bf21f29cf589a335f
-```
-
-ผลลัพธ์จะอยู่ใน `dist/` ได้แก่ ตัวติดตั้ง ตัวคืนค่า HTML ที่แปลแล้ว payload และรายงาน checksum การ build ยังไม่แก้ไฟล์เกมหรือไคลเอนต์ที่ติดตั้งอยู่
-
-## ติดตั้ง
-
-ปิด Hogwarts Legacy ก่อน แล้วเรียก:
-
-```powershell
-.\dist\Install-ThaiMenu.ps1 -ClientPath "F:\ArcaneMP-1.12.2\client"
-```
-
-ตัวติดตั้งตรวจเวอร์ชันและ checksum เตรียม DLL ใหม่ ตรวจผลก่อนแทนที่ และเก็บ DLL เดิมไว้ใต้ `client\thai-menu-backups\<เวลา>\ArcaneMPClient.dll` จากนั้นเปิดเกมผ่าน ArcaneMP ใหม่
-
-## คืนเมนูเดิม
-
-ปิดเกมก่อน แล้วเรียก:
-
-```powershell
-.\dist\Restore-OriginalMenu.ps1 -ClientPath "F:\ArcaneMP-1.12.2\client"
-```
-
-สคริปต์คืนค่าจะทำงานเฉพาะ DLL ที่มี checksum ตรงกับแพตช์นี้ และเลือกสำเนา DLL เดิมที่ตรวจ checksum แล้ว หากมีการอัปเดตหรือแก้ไขอย่างอื่นภายหลัง สคริปต์จะหยุด
-
-## ตรวจหน้าเมนู
-
-หลัง build:
-
-```powershell
-npx playwright install chromium
 npm run qa
 ```
 
-QA เปิด payload ที่บีบอัดจริง ตรวจฟอนต์และหน้าเมนูทั้ง 4 หมวด ทดสอบโหมดกดเพื่อพูดและส่งเสียงอัตโนมัติ และจำลอง native bridge เพื่อตรวจข้อมูลที่ส่งกลับ
-
-## วิธีทำงาน
-
-1. ตรวจ DLL ต้นฉบับด้วย SHA-256 แล้วดึง HTML ที่ตำแหน่งที่ตรวจสอบไว้
-2. เปลี่ยนข้อความด้วย JavaScript AST โดยรักษาชื่อ event, field, object key และปุ่มคีย์บอร์ด
-3. สร้างฟอนต์ย่อยสำหรับอักษรไทยจาก Noto Sans Thai และฝังในหน้าเมนู
-4. บีบอัด HTML เพื่อให้ใส่ในพื้นที่เดิมได้ โดยคงขนาด DLL และข้อมูลนอกส่วน HTML ทุกไบต์
-5. สร้าง payload และตัวติดตั้งที่มี checksum ของต้นฉบับและผลลัพธ์
-
-ไคลเอนต์รุ่นนี้ใช้ CEF ที่รองรับ `DecompressionStream` เพื่อโหลด HTML ที่บีบอัด โดยไม่ต้องโหลดฟอนต์หรือสคริปต์แปลจากอินเทอร์เน็ต
-
-## ข้อจำกัดและการอัปเดต
-
-- รองรับ DLL รุ่นที่ระบุเท่านั้น
-- ตัวอัปเดตของ ArcaneMP อาจคืน DLL เป็นเวอร์ชันทางการ เมื่อไคลเอนต์เปลี่ยนรุ่นต้องตรวจและสร้างแพตช์ใหม่
-- การทดสอบ Chromium ยังไม่แทนการทดสอบภายในเกมจริง
-- ไฟล์ `dist/`, DLL ของเกม/ไคลเอนต์, cache, log, เซฟ และข้อมูลเซิร์ฟเวอร์ไม่รวมใน repository
+สคริปต์ส่วนนี้ตรวจ SHA-256 แบบเดิม ส่วน EXE ใช้การตรวจโครงสร้างโดยไม่ล็อกเลขเวอร์ชัน
 
 ## เครดิต
 
-คำแปลและสคริปต์ใน repository นี้จัดทำสำหรับชุดแพตช์นี้ ตัวโปรแกรมและเมนูต้นฉบับเป็นของผู้จัดทำ [ArcaneMP](https://arcane.mp/)
+ตัวโปรแกรมและเมนูต้นฉบับเป็นของผู้จัดทำ [ArcaneMP](https://arcane.mp/) repository ไม่รวม DLL, cache, log, เซฟ หรือข้อมูลเซิร์ฟเวอร์
 
-ฟอนต์ [Noto Sans Thai](https://github.com/google/fonts/tree/main/ofl/notosansthai) ใช้ SIL Open Font License 1.1 ดู [assets/OFL-NotoSansThai.txt](assets/OFL-NotoSansThai.txt)
+ฟอนต์ [Noto Sans Thai](https://github.com/google/fonts/tree/main/ofl/notosansthai) ใช้ SIL Open Font License 1.1 ดู [assets/OFL-NotoSansThai.txt](assets/OFL-NotoSansThai.txt) ใบอนุญาตฝังอยู่ใน EXE และเปิดอ่านได้จากหน้าต่างติดตั้ง
 
-Dependencies: [Acorn](https://github.com/acornjs/acorn), [subset-font](https://github.com/papandreou/subset-font), [Playwright](https://github.com/microsoft/playwright)
+เครื่องมือพัฒนาเพิ่มเติม: [Acorn](https://github.com/acornjs/acorn), [subset-font](https://github.com/papandreou/subset-font), [Playwright](https://github.com/microsoft/playwright)
