@@ -24,10 +24,15 @@ $arguments += '/resource:' + (Join-Path $repoRoot 'assets/ArcaneThai.woff2') + '
 $arguments += '/resource:' + (Join-Path $repoRoot 'assets/OFL-NotoSansThai.txt') + ',ArcaneThai.FontLicense'
 $arguments += '/resource:' + $GamePackPath + ',ArcaneThai.GamePak'
 $arguments += '/resource:' + (Join-Path $repoRoot 'assets/GAME-CREDITS.txt') + ',ArcaneThai.GameCredits'
+foreach ($preview in @(@('play','Play'),@('voice','Voice'),@('audio','Audio'),@('graphics','Graphics'),@('owl-post','Owl'),@('about','About'))) {
+    $arguments += '/resource:' + (Join-Path $repoRoot ('docs/preview-'+$preview[0]+'.png')) + ',ArcaneThai.Preview.'+$preview[1]
+}
 $arguments += Join-Path $repoRoot 'installer/PatchEngine.cs'
 $arguments += Join-Path $repoRoot 'installer/ModStorage.cs'
 $arguments += Join-Path $repoRoot 'installer/GameThaiEngine.cs'
-$arguments += Join-Path $repoRoot 'installer/GameThaiPanel.cs'
+$arguments += Join-Path $repoRoot 'installer/UiTheme.cs'
+$arguments += Join-Path $repoRoot 'installer/InstallPage.cs'
+$arguments += Join-Path $repoRoot 'installer/InstallerForm.cs'
 $arguments += Join-Path $repoRoot 'installer/Program.cs'
 & $compiler @arguments
 if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed.' }
