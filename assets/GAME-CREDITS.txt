@@ -1,0 +1,34 @@
+Hogwarts Legacy Thai game text and fonts
+
+Original community project: Hogwarts Legacy Thailand Localization
+https://github.com/Nasz/Hogwarts-Legacy-Thai-Mod
+Upstream PAK blob: 1de4f7a4283bc84d61add00cc2388737b8eba9b5
+
+Translation and review contributors credited by that project:
+Apisara Kongtaworn; Chanamon Bejraputra; Chanin Chamnan; hamstersquad;
+James Evergarden; jaideejung007; Kun Roonprapant; may I R0SE; mookthebun;
+Naruebet Chaipin; Natsinee Pongsuwan; Nawaphat S.; NurShine;
+Phiraphat Sidon; Phurichote C.; Pun Paramatt; Pichaphat Nilavadhanananda;
+Saksorn Klibaim; SoLRuN; SimsColony; Spider-Translate;
+Thamolwan Khumprakob; Wongpanithan C.
+
+Upstream game font credits: Kanit and Sriracha by Cadson Demak;
+Noto Sans Thai by Google; Ekkhanek by Book Thanthip.
+See the upstream README for the contributors' links and complete credits.
+
+This adaptation merges available Thai values into the English dictionaries
+extracted from the tested game installation. It preserves all 56,112 keys,
+uses Thai in 40,520 entries, and keeps English for missing or incompatible
+translations. It does not include Thai voice acting or image signs.
+Coverage counts entries containing Thai; it is not a quality guarantee.
+
+Adapted PAK SHA-256:
+164f13205cd5d9968856a3ce7d3dd7b749c55779705a2610a76a9fecff37a565
+
+PAK construction: repak by trumank (MIT / Apache-2.0)
+https://github.com/trumank/repak
+AVAFDICT format reference: parseltongue by insomnious (GPL-3.0)
+https://github.com/insomnious/parseltongue
+
+Hogwarts Legacy and its original content belong to their respective owners.
+This installer credits the upstream contributors; it does not claim their work.

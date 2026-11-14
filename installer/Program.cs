@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 [assembly: AssemblyTitle("ArcaneMP Thai Menu Installer")]
-[assembly: AssemblyDescription("Thai menu installer with automatic menu detection and backups")]
-[assembly: AssemblyVersion("0.3.0.0")]
-[assembly: AssemblyFileVersion("0.3.0.0")]
+[assembly: AssemblyDescription("Thai installer for ArcaneMP menus and Hogwarts Legacy game text")]
+[assembly: AssemblyVersion("0.4.0.0")]
+[assembly: AssemblyFileVersion("0.4.0.0")]
 
 namespace ArcaneThai
 {
@@ -18,6 +18,8 @@ namespace ArcaneThai
         [STAThread]
         private static int Main(string[] args)
         {
+            AppContext.SetSwitch("Switch.System.IO.UseLegacyPathHandling", false);
+            AppContext.SetSwitch("Switch.System.IO.BlockLongPaths", false);
             if (args.Length >= 2 && args[0] != "--render") {
                 try {
                     object result;
@@ -25,6 +27,9 @@ namespace ArcaneThai
                         case "--inspect": result = PatchEngine.Inspect(args[1]); break;
                         case "--install": result = PatchEngine.Install(args[1]); break;
                         case "--restore": result = PatchEngine.Restore(args[1]); break;
+                        case "--game-inspect": result = GameThaiEngine.Inspect(args[1], args.Length >= 4 ? args[3] : "arcanemp"); break;
+                        case "--game-install": result = GameThaiEngine.Install(args[1], args.Length >= 4 ? args[3] : "arcanemp"); break;
+                        case "--game-uninstall": result = GameThaiEngine.Uninstall(args[1], args.Length >= 4 ? args[3] : "arcanemp"); break;
                         case "--extract":
                             if (args.Length < 3) throw new ArgumentException("Specify an output HTML file.");
                             File.WriteAllText(args[2], PatchEngine.ExtractForTests(PatchEngine.ResolveTarget(args[1])), new System.Text.UTF8Encoding(false));
@@ -46,7 +51,7 @@ namespace ArcaneThai
             Application.SetCompatibleTextRenderingDefault(false);
             using (var form = new InstallerForm()) {
                 if (args.Length >= 2 && args[0] == "--render") {
-                    form.RenderPreview(args[1]);
+                    form.RenderPreview(args[1], args.Length >= 3 ? args[2] : "menu");
                     return 0;
                 }
                 Application.Run(form);
@@ -68,6 +73,8 @@ namespace ArcaneThai
         private readonly Panel statePanel = new Panel();
         private readonly ProgressBar progress = new ProgressBar();
         private readonly Timer debounce = new Timer();
+        private readonly TabControl sections = new TabControl();
+        private readonly GameThaiPanel gamePage;
         private Inspection inspection;
         private string backupPath;
         private int revision;
@@ -79,7 +86,7 @@ namespace ArcaneThai
 
         public InstallerForm()
         {
-            Text = "ตัวติดตั้งภาษาไทย ArcaneMP 0.3.0";
+            Text = "ตัวติดตั้งภาษาไทย ArcaneMP และ Hogwarts Legacy 0.4.0";
             ClientSize = new Size(820, 640);
             MinimumSize = new Size(780, 650);
             StartPosition = FormStartPosition.CenterScreen;
@@ -89,15 +96,26 @@ namespace ArcaneThai
             AutoScaleMode = AutoScaleMode.Dpi;
             AutoScaleDimensions = new SizeF(96f, 96f);
             ShowIcon = false;
+            sections.Dock = DockStyle.Fill;
+            sections.Padding = new Point(18, 8);
+            Controls.Add(sections);
+            var menuTab = new TabPage("เมนู ArcaneMP") { BackColor = Color.White };
+            var gameTab = new TabPage("ตัวเกม Hogwarts Legacy") { BackColor = Color.White };
+            sections.TabPages.Add(menuTab);
+            sections.TabPages.Add(gameTab);
+            gamePage = new GameThaiPanel();
+            gameTab.Controls.Add(gamePage);
+            sections.Selecting += (sender, e) => { if (writing || gamePage.IsBusy) e.Cancel = true; };
+            sections.SelectedIndexChanged += (sender, e) => { if (sections.SelectedIndex == 1) gamePage.SetDefaultClient(location.Text); };
 
             var layout = new TableLayoutPanel {
                 Dock = DockStyle.Fill, Padding = new Padding(30, 24, 30, 22),
                 ColumnCount = 1, RowCount = 10
             };
-            int[] heights = { 48, 66, 28, 44, 48, 120, 18, 62, 42 };
+            int[] heights = { 44, 56, 28, 44, 48, 108, 18, 58, 42 };
             foreach (int height in heights) layout.RowStyles.Add(new RowStyle(SizeType.Absolute, height));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            Controls.Add(layout);
+            menuTab.Controls.Add(layout);
 
             var title = new Label {
                 Text = "ติดตั้งเมนูภาษาไทย", AutoSize = false, Dock = DockStyle.Fill,
@@ -192,7 +210,7 @@ namespace ArcaneThai
                     Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Path.GetDirectoryName(backupPath) + "\"") { UseShellExecute = true });
             };
             FormClosing += (sender, e) => {
-                if (writing) { e.Cancel = true; SetStatus("กำลังบันทึกไฟล์", "โปรดรอให้การติดตั้งหรือคืนค่าเสร็จก่อนปิดหน้าต่าง", false, false); }
+                if (writing || gamePage.IsBusy) { e.Cancel = true; if (writing) SetStatus("กำลังบันทึกไฟล์", "โปรดรอให้การติดตั้งหรือคืนค่าเสร็จก่อนปิดหน้าต่าง", false, false); }
             };
         }
 
@@ -292,7 +310,7 @@ namespace ArcaneThai
             stateTitle.ForeColor = error ? Color.FromArgb(147, 40, 32) : success ? Color.FromArgb(25, 103, 66) : Ink;
         }
 
-        public void RenderPreview(string output)
+        public void RenderPreview(string output, string section)
         {
             rendering = true;
             ShowInTaskbar = false;
@@ -301,6 +319,7 @@ namespace ArcaneThai
             location.Text = @"F:\ArcaneMP\ArcaneMPClient.dll";
             install.Enabled = true;
             SetStatus("พร้อมติดตั้งภาษาไทย", "ใช้ DLL ภาษาไทยแยกไฟล์ พร้อมสำรองการตั้งค่า Launcher", false, false);
+            if (section == "game" || section == "game-direct") { gamePage.RenderPreview(section == "game-direct"); sections.SelectedIndex = 1; }
             Show();
             Application.DoEvents();
             PerformLayout();

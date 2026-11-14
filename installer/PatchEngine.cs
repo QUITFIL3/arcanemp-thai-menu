@@ -145,7 +145,7 @@ namespace ArcaneThai
             string backupFile = System.IO.Path.Combine(backupDirectory, "ArcaneMPClient.dll");
             var record = new Dictionary<string, object> {
                 { "sourceSha256", sourceHash }, { "localizedSha256", after },
-                { "createdUtc", DateTime.UtcNow.ToString("o") }, { "installerVersion", "0.3.0" },
+                { "createdUtc", DateTime.UtcNow.ToString("o") }, { "installerVersion", Assembly.GetExecutingAssembly().GetName().Version.ToString(3) },
                 { "hadModDllName", previousState == null ? config.ContainsKey("mod_dll_name") : previousState["hadModDllName"] },
                 { "originalModDllName", previousState == null ? modName : previousState["originalModDllName"] }
             };
@@ -450,7 +450,8 @@ namespace ArcaneThai
                     byte[] bytes = ReadResource(resource);
                     data.Write(bytes, 0, bytes.Length);
                 }
-                byte[] revision = Encoding.ASCII.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString());
+                // Menu content has not changed since 0.3. Keep existing installations current.
+                byte[] revision = Encoding.ASCII.GetBytes("0.3.0.0");
                 data.Write(revision, 0, revision.Length);
                 return "<!-- arcane-thai-catalog:" + Hash(data.ToArray()) + " -->";
             }

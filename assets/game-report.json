@@ -1,0 +1,50 @@
+{
+  "version": "0.1",
+  "createdAt": "2026-11-13",
+  "game": "Hogwarts Legacy",
+  "file": "game/zArcaneThai_Community_P.pak",
+  "sha256": "164f13205cd5d9968856a3ce7d3dd7b749c55779705a2610a76a9fecff37a565",
+  "bytes": 3903569,
+  "source": {
+    "url": "https://github.com/Nasz/Hogwarts-Legacy-Thai-Mod",
+    "blob": "1de4f7a4283bc84d61add00cc2388737b8eba9b5",
+    "credits": "Original Thai translations and game fonts by the Hogwarts Legacy Thailand Localization community and the contributors credited in that repository. This is an adaptation for the locally installed game, not a new full-game translation."
+  },
+  "coverage": [
+    {
+      "file": "MAIN",
+      "original": 21157,
+      "community": 18496,
+      "thai": 15733,
+      "english": 5424,
+      "newKeysKept": 2679,
+      "tokenMismatchKeptEnglish": 11,
+      "roundTrip": true
+    },
+    {
+      "file": "SUB",
+      "original": 34955,
+      "community": 34955,
+      "thai": 24787,
+      "english": 10168,
+      "newKeysKept": 0,
+      "tokenMismatchKeptEnglish": 14,
+      "roundTrip": true
+    }
+  ],
+  "totalEntries": 56112,
+  "thaiEntries": 40520,
+  "preservesAllCurrentGameKeys": true,
+  "keepsEnglishForNewOrUnsafeEntries": true,
+  "engineLaunchTested": false,
+  "originalLocalizationFiles": [
+    {
+      "file": "MAIN-enUS.bin",
+      "sha256": "85550d10ea7b434333cb22c9644878e7ecfa0ed1ecb529f4af75bcfbbef8914b"
+    },
+    {
+      "file": "SUB-enUS.bin",
+      "sha256": "4149f5bd5910f75c613e09bdb3156b31793a497c8a1b7dc96c0278fab96d7634"
+    }
+  ]
+}
