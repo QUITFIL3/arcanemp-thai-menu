@@ -33,9 +33,9 @@ Check ((Test-Path -LiteralPath (Join-Path $root 'ArcaneMPClient.Thai.dll')) -and
 Check ((Run $current '--inspect' $root).NeedsRefresh -and (Run $current '--game-inspect' $root).NeedsMigration) 'Legacy menu and game pack are detected as needing migration'
 $menu=Run $current '--install' $root
 $game=Run $current '--game-install' $root
-Check ($menu.LocalizedPath -eq (Join-Path $root 'mods/ArcaneThai/ArcaneMPClient.Thai.dll') -and -not (Test-Path -LiteralPath (Join-Path $root 'ArcaneMPClient.Thai.dll'))) 'Menu migration removes the owned root DLL after backing it up'
+Check ($menu.LocalizedPath -eq (Join-Path $root 'mods/ArcaneThai/ArcaneMPClient.Thai.dll') -and (Run $current '--inspect' $root).LoaderLinked) 'Menu migration stores its payload in mods and links it at the original module path'
 $config=Get-Content -Raw -LiteralPath (Join-Path $root 'ArcaneMP_launcher.json') | ConvertFrom-Json
-Check ($config.mod_dll_name -eq 'mods\ArcaneThai\ArcaneMPClient.Thai.dll' -and $config.custom -eq 'keep me') 'Launcher points to the mods DLL and preserves other settings'
+Check ($config.mod_dll_name -eq 'ArcaneMPClient.Thai.dll' -and $config.custom -eq 'keep me') 'Launcher uses the root module path and preserves other settings'
 Check ((Hash (Join-Path $root 'ArcaneMPClient.dll')) -eq $originalHash) 'Migration preserves every byte of the official DLL'
 Check ((Run $current '--inspect' $root).IsInstalled -and (Run $current '--game-inspect' $root).LoaderLinked) 'Both translated components are installed from the mods folder'
 Check ($game.BackupPath -and (Hash $game.BackupPath) -eq $game.Sha256) 'The legacy PAK is retained as a verified backup'
@@ -47,6 +47,10 @@ $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 $probeDll=Join-Path $root 'mods/ArcaneThai/Probe.dll'
 & $compiler /nologo /target:library ('/out:'+$probeDll) $probeSource
 if($LASTEXITCODE -ne 0){throw 'Probe DLL compilation failed'}
+$probeAlias=Join-Path $root 'Probe.dll'
+New-Item -ItemType HardLink -Path $probeAlias -Target $probeDll | Out-Null
+$helper=Join-Path $root 'cef_subprocess.exe'
+[IO.File]::WriteAllText($helper,'a harmless CEF helper marker')
 $loaderSource=Join-Path $testRoot 'NativeLoaderProbe.cs'
 $loaderText=@'
 using System;
@@ -62,10 +66,11 @@ public static class NativeLoaderProbe {
  public static int Main(string[] args) {
   if(!SetDefaultDllDirectories(0x1000) || AddDllDirectory(args[0])==IntPtr.Zero) return 2;
   Directory.SetCurrentDirectory(args[1]);
-  IntPtr module=LoadLibraryW(@"mods\ArcaneThai\Probe.dll");
+  IntPtr module=LoadLibraryW("Probe.dll");
   if(module==IntPtr.Zero){Console.WriteLine("Win32 error "+Marshal.GetLastWin32Error());return 3;}
   var path=new StringBuilder(32768);GetModuleFileNameW(module,path,path.Capacity);
-  Console.WriteLine(path.ToString());FreeLibrary(module);return 0;
+  Console.WriteLine(path.ToString());FreeLibrary(module);
+  return File.Exists(Path.Combine(Path.GetDirectoryName(path.ToString()),"cef_subprocess.exe")) ? 0 : 4;
  }
 }
 '@
@@ -76,7 +81,7 @@ if($LASTEXITCODE -ne 0){throw 'Native loader probe compilation failed'}
 $otherWorkDir=Join-Path $testRoot 'different game working directory'
 New-Item -ItemType Directory -Force -Path $otherWorkDir | Out-Null
 $loadedPath=& $loader $root $otherWorkDir
-Check ($LASTEXITCODE -eq 0 -and $loadedPath -eq $probeDll) 'Windows resolves the relative mods DLL through the client search directory from a different game working directory'
+Check ($LASTEXITCODE -eq 0 -and $loadedPath -eq $probeAlias) 'Windows reports the original module directory when loading a root hard link so CEF can find its helper'
 Remove-Item -LiteralPath $game.LoaderPath
 Check ((Run $current '--game-inspect' $root).NeedsMigration) 'A missing native loader link is detected'
 $repaired=Run $current '--game-install' $root

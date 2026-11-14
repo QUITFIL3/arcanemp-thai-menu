@@ -10,6 +10,9 @@ namespace ArcaneThai
     {
         public const string RelativeDirectory = @"mods\ArcaneThai";
         public const string MenuDll = @"mods\ArcaneThai\ArcaneMPClient.Thai.dll";
+        // CEF resolves its subprocess/resources relative to the loaded module path.
+        // Load the root hard link, while keeping the owned payload in mods.
+        public const string MenuLoader = "ArcaneMPClient.Thai.dll";
         public static string DirectoryFor(string root) { return Path.Combine(root, RelativeDirectory); }
 
         public static void EnsureDirectory(string root, string directory)

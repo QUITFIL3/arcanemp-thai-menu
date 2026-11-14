@@ -91,10 +91,11 @@ foreach ($fixture in $fixtures) {
     Assert-True ($manifest.files[0].sha256 -eq $beforeHash.ToLowerInvariant()) 'Official DLL still matches the updater checksum after installation'
     $configPath = Join-Path $directory 'ArcaneMP_launcher.json'
     $config = Get-Content -Raw -LiteralPath $configPath | ConvertFrom-Json
-    Assert-True ($config.mod_dll_name -eq 'mods\ArcaneThai\ArcaneMPClient.Thai.dll' -and $config.custom.keep -eq 42 -and $config.game_path_manual) 'Launcher loads from mods while custom settings survive'
+    Assert-True ($config.mod_dll_name -eq 'ArcaneMPClient.Thai.dll' -and $config.custom.keep -eq 42 -and $config.game_path_manual) 'Launcher uses the root hard link to preserve the CEF module directory while custom settings survive'
     $second = Invoke-Installer '--install' $fixture
     Assert-True (-not $second.Changed) 'Repeated install is idempotent'
     $inspectInstalled = Invoke-Installer '--inspect' $fixture
+    Assert-True ($inspectInstalled.LoaderLinked -and $inspectInstalled.LoaderPath -eq (Join-Path $directory 'ArcaneMPClient.Thai.dll')) 'Menu payload and root loader have the same file identity'
     Assert-True ($inspectInstalled.IsInstalled -and $inspectInstalled.CanRestore) 'Installed menu and restore availability are detected'
     if (-not (Test-Path -LiteralPath (Join-Path $testRoot 'patched-menu.html'))) {
         # Extract the localized copy under the expected fixture filename for the diagnostic CLI.
@@ -112,6 +113,7 @@ foreach ($fixture in $fixtures) {
     $restoredConfig = Get-Content -Raw -LiteralPath $configPath | ConvertFrom-Json
     Assert-True ($restoredConfig.mod_dll_name -eq 'ArcaneMPClient.dll' -and $restoredConfig.game_path -eq 'E:/changed after install') 'Restore preserves launcher changes made after installation'
     Assert-True (-not (Test-Path -LiteralPath $installed.LocalizedPath)) 'Restore removes the separate localized copy after backing it up'
+    Assert-True (-not (Test-Path -LiteralPath $installed.LoaderPath)) 'Restore removes the owned menu loader link'
 }
 Assert-True ($offsets[0] -ne $offsets[1]) 'Menu detection works at different offsets without a version/hash list'
 

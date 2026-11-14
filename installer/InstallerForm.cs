@@ -23,7 +23,7 @@ namespace ArcaneThai
 
         public InstallerForm()
         {
-            Text = "ArcaneThai | ตัวติดตั้งภาษาไทย 0.6.0";
+            Text = "ArcaneThai | ตัวติดตั้งภาษาไทย 0.6.1";
             ClientSize = new Size(1020, 630); MinimumSize = new Size(936, 659);
             BackColor = Ui.Canvas; ForeColor = Ui.Text; Font = Ui.Font(); ShowIcon = false;
             StartPosition = FormStartPosition.CenterScreen;
@@ -45,7 +45,7 @@ namespace ArcaneThai
                 rail.Controls.Add(navigation[index], 0, index + 3);
             }
             rail.Controls.Add(Ui.Label("คำแปลตัวเกมประมาณ 72%", 9, Ui.Muted), 0, 8);
-            rail.Controls.Add(Ui.Label("เวอร์ชัน 0.6.0", 9, Ui.Muted), 0, 9);
+            rail.Controls.Add(Ui.Label("เวอร์ชัน 0.6.1", 9, Ui.Muted), 0, 9);
             frame.Controls.Add(rail, 0, 0);
             content.Dock = DockStyle.Fill; content.Margin = Padding.Empty;
             frame.Controls.Add(content, 1, 0);
@@ -111,7 +111,7 @@ namespace ArcaneThai
             layout.Controls.Add(Ui.Label("เมื่อ ArcaneMP อัปเดต", 12, Ui.Gold, true), 0, 4);
             layout.Controls.Add(Ui.Label("เปิดตัวติดตั้งเพื่อตรวจและติดตั้งเมนูไทยซ้ำให้ตรงกับ client รุ่นใหม่\nไฟล์ทางการยังอยู่เหมือนเดิม มีสำเนาก่อนเปลี่ยนและปุ่มคืนค่า", 10.5f, Ui.Muted), 0, 5);
             layout.Controls.Add(Ui.Label("โฟลเดอร์มอดภาษาไทย", 12, Ui.Gold, true), 0, 6);
-            layout.Controls.Add(Ui.Label("เก็บ DLL และแพ็กตัวเกมที่ ArcaneMP\\mods\\ArcaneThai\nแพ็กใช้ hard link บน NTFS เพื่อให้จุดสแกนเดิมโหลดไฟล์เดียวกัน", 10.5f, Ui.Muted), 0, 7);
+            layout.Controls.Add(Ui.Label("เก็บ DLL และแพ็กตัวเกมที่ ArcaneMP\\mods\\ArcaneThai\nใช้ hard link บน NTFS ให้ทั้งสองส่วนโหลดจากตำแหน่งเดิม", 10.5f, Ui.Muted), 0, 7);
             var open = new ActionButton { Text = "เปิดโฟลเดอร์มอด", Width = 190, Dock = DockStyle.Left };
             open.Click += (sender, e) => { string root = ClientPage.CurrentRoot; string folder = root == "" ? "" : ModStorage.DirectoryFor(root); if (Directory.Exists(folder)) System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "\"" + folder + "\"") { UseShellExecute = true }); else MessageBox.Show(this, "เลือกโฟลเดอร์ ArcaneMP และติดตั้งภาษาไทยก่อน", "ยังไม่พบโฟลเดอร์มอด", MessageBoxButtons.OK, MessageBoxIcon.Information); };
             layout.Controls.Add(open, 0, 8);

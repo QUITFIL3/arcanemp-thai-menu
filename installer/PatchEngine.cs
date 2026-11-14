@@ -24,6 +24,8 @@ namespace ArcaneThai
         public bool CanRestore;
         public bool NeedsRefresh;
         public string LocalizedPath;
+        public string LoaderPath;
+        public bool LoaderLinked;
         internal string Html;
     }
 
@@ -39,6 +41,7 @@ namespace ArcaneThai
         public bool OutsideMenuUnchanged;
         public bool OfficialFileUnchanged;
         public string LocalizedPath;
+        public string LoaderPath;
         public string Message;
     }
 
@@ -62,7 +65,7 @@ namespace ArcaneThai
         private const string EndMarker = "<!-- arcane-thai-menu:runtime-v2:end -->";
         private const int MaxHtmlBytes = 16 * 1024 * 1024;
         private const string ThaiDll = ModStorage.MenuDll;
-        private const string LegacyThaiDll = "ArcaneMPClient.Thai.dll";
+        private const string LoaderDll = ModStorage.MenuLoader;
         private const string StateFile = "arcane-thai-menu.json";
         private static readonly Encoding StrictUtf8 = new UTF8Encoding(false, true);
         private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = MaxHtmlBytes };
@@ -88,23 +91,25 @@ namespace ArcaneThai
             string sha = Hash(bytes);
             string directory = System.IO.Path.GetDirectoryName(target);
             string localized = System.IO.Path.Combine(directory, ThaiDll);
+            string loader = System.IO.Path.Combine(directory, LoaderDll);
             var state = ReadState(directory);
             var config = ReadConfig(directory);
             string configuredDll = Value(config, "mod_dll_name").Replace('/', '\\');
-            bool selectedThai = configuredDll == ThaiDll;
+            bool selectedThai = configuredDll == LoaderDll;
+            bool linked = ModStorage.SameFile(localized, loader);
             bool installed = false;
             if (state != null && selectedThai && File.Exists(localized)) {
                 byte[] translated = ReadClient(localized);
-                installed = Value(state, "sourceSha256") == sha && Value(state, "localizedSha256") == Hash(translated)
+                installed = linked && Value(state, "sourceSha256") == sha && Value(state, "localizedSha256") == Hash(translated)
                     && LocateMenu(translated).Html.Contains(CatalogStamp());
             }
             return new Inspection {
                 TargetPath = target, Sha256 = sha, FileVersion = VersionOf(target),
                 MenuOffset = block.Offset, MenuLength = block.Length, Html = block.Html,
-                IsInstalled = installed, LocalizedPath = localized,
+                IsInstalled = installed, LocalizedPath = localized, LoaderPath = loader, LoaderLinked = linked,
                 NeedsRefresh = state != null && !installed,
                 HasPreviousThaiPatch = block.Html.Contains("lang=\"th\"") || block.Html.Contains(StartMarker),
-                CanRestore = (state != null && (selectedThai || configuredDll == LegacyThaiDll)) || FindBackup(target, sha) != null
+                CanRestore = (state != null && (selectedThai || configuredDll == ThaiDll)) || FindBackup(target, sha) != null
             };
         }
 
@@ -118,6 +123,7 @@ namespace ArcaneThai
             string versionBefore = VersionOf(target);
             string directory = System.IO.Path.GetDirectoryName(target);
             string localized = System.IO.Path.Combine(directory, ThaiDll);
+            string loader = System.IO.Path.Combine(directory, LoaderDll);
             var config = ReadConfig(directory);
             var previousState = ReadState(directory);
             if (File.Exists(localized) && previousState == null)
@@ -125,14 +131,13 @@ namespace ArcaneThai
             if (File.Exists(localized) && Hash(File.ReadAllBytes(localized)) != Value(previousState, "localizedSha256"))
                 throw new InvalidOperationException("DLL ในโฟลเดอร์ mods ถูกเปลี่ยนภายหลัง จึงไม่เขียนทับไฟล์นั้น");
             string modName = Value(config, "mod_dll_name").Replace('/', '\\');
-            if (modName != "" && modName != "ArcaneMPClient.dll" && modName != ThaiDll && modName != LegacyThaiDll)
+            if (modName != "" && modName != "ArcaneMPClient.dll" && modName != ThaiDll && modName != LoaderDll)
                 throw new InvalidOperationException("Launcher กำลังใช้ DLL ของมอดอื่น โปรดคืนค่ามอดนั้นก่อนติดตั้งภาษาไทย");
-            if ((modName == ThaiDll || modName == LegacyThaiDll) && previousState == null)
+            if ((modName == ThaiDll || modName == LoaderDll) && previousState == null)
                 throw new InvalidOperationException("ไม่พบข้อมูลการติดตั้งเดิม จึงยังเปลี่ยนการตั้งค่า Launcher ไม่ได้");
-            string legacyLocalized = System.IO.Path.Combine(directory, LegacyThaiDll);
-            bool migrateLegacy = File.Exists(legacyLocalized) && previousState != null && Hash(File.ReadAllBytes(legacyLocalized)) == Value(previousState, "localizedSha256");
-            if (modName == LegacyThaiDll && !migrateLegacy)
-                throw new InvalidOperationException("DLL ภาษาไทยรุ่นเดิมไม่ตรงกับข้อมูลติดตั้ง จึงยังย้ายเข้า mods ไม่ได้");
+            if (File.Exists(loader) && (previousState == null || Hash(File.ReadAllBytes(loader)) != Value(previousState, "localizedSha256")))
+                throw new InvalidOperationException("ไฟล์ตำแหน่งโหลด DLL ไม่ตรงกับข้อมูลติดตั้ง จึงไม่เขียนทับไฟล์นั้น");
+            if (Directory.Exists(loader)) throw new InvalidOperationException("มีโฟลเดอร์ใช้ชื่อเดียวกับ DLL จุดโหลด โปรดย้ายโฟลเดอร์นั้นก่อน");
             byte[] source = OfficialSource(target, original);
             string sourceHash = Hash(source);
             MenuBlock block = LocateMenu(source);
@@ -140,7 +145,7 @@ namespace ArcaneThai
                 TargetPath = target, BeforeSha256 = before, AfterSha256 = before,
                 FileVersionBefore = versionBefore, FileVersionAfter = versionBefore,
                 Changed = false, OutsideMenuUnchanged = true, OfficialFileUnchanged = true,
-                LocalizedPath = localized, Message = "ติดตั้งภาษาไทยชุดนี้ไว้แล้ว"
+                LocalizedPath = localized, LoaderPath = loader, Message = "ติดตั้งภาษาไทยชุดนี้ไว้แล้ว"
             };
 
             string html = LocalizeHtml(block.Html);
@@ -157,14 +162,14 @@ namespace ArcaneThai
                 { "hadModDllName", previousState == null ? config.ContainsKey("mod_dll_name") : previousState["hadModDllName"] },
                 { "originalModDllName", previousState == null ? modName : previousState["originalModDllName"] }
             };
-            config["mod_dll_name"] = ThaiDll;
+            config["mod_dll_name"] = LoaderDll;
             ModStorage.EnsureDirectory(directory, System.IO.Path.GetDirectoryName(localized));
             var changes = new List<FileChange>();
             if (before != sourceHash) changes.Add(new FileChange(target, source));
             changes.Add(new FileChange(localized, patched));
+            changes.Add(new FileChange(loader, patched) { LinkSource = localized });
             changes.Add(new FileChange(System.IO.Path.Combine(directory, StateFile), JsonBytes(record)));
             changes.Add(new FileChange(System.IO.Path.Combine(directory, "ArcaneMP_launcher.json"), JsonBytes(config)));
-            if (migrateLegacy) changes.Add(new FileChange(legacyLocalized, null));
             File.WriteAllBytes(backupFile, original);
             ApplyChanges(changes, backupDirectory);
             if (Hash(File.ReadAllBytes(target)) != sourceHash) throw new IOException("ตรวจ DLL ทางการหลังติดตั้งไม่ผ่าน");
@@ -175,8 +180,8 @@ namespace ArcaneThai
                 TargetPath = target, BackupPath = backupFile, BeforeSha256 = before, AfterSha256 = sourceHash,
                 FileVersionBefore = versionBefore, FileVersionAfter = versionAfter,
                 Changed = true, OutsideMenuUnchanged = true, OfficialFileUnchanged = before == sourceHash,
-                LocalizedPath = localized,
-                Message = "ติดตั้งเมนูไทยใน mods\\ArcaneThai แล้ว เปิด ArcaneMP ใหม่ได้"
+                LocalizedPath = localized, LoaderPath = loader,
+                Message = "ติดตั้งเมนูไทยใน mods และเชื่อมจุดโหลดให้ CEF ใช้โฟลเดอร์เดิมแล้ว"
             };
         }
 
@@ -192,17 +197,22 @@ namespace ArcaneThai
             var config = ReadConfig(directory);
             if (state != null) {
                 string activeDll = Value(config, "mod_dll_name").Replace('/', '\\');
-                if (activeDll != ThaiDll && activeDll != LegacyThaiDll)
+                if (activeDll != ThaiDll && activeDll != LoaderDll)
                     throw new InvalidOperationException("การตั้งค่า Launcher ถูกเปลี่ยนหลังติดตั้ง จึงไม่เขียนทับการตั้งค่าปัจจุบัน");
                 if (Convert.ToBoolean(state["hadModDllName"])) config["mod_dll_name"] = state["originalModDllName"];
                 else config.Remove("mod_dll_name");
                 string backupDirectory = NewBackupDirectory(target);
-                string localized = System.IO.Path.Combine(directory, activeDll);
                 var changes = new List<FileChange> {
                     new FileChange(System.IO.Path.Combine(directory, "ArcaneMP_launcher.json"), JsonBytes(config)),
                     new FileChange(System.IO.Path.Combine(directory, StateFile), null)
                 };
-                if (File.Exists(localized)) changes.Add(new FileChange(localized, null));
+                foreach (string relative in new[] { LoaderDll, ThaiDll }) {
+                    string localized = System.IO.Path.Combine(directory, relative);
+                    if (!File.Exists(localized)) continue;
+                    if (Hash(File.ReadAllBytes(localized)) != Value(state, "localizedSha256"))
+                        throw new InvalidOperationException("DLL ภาษาไทยถูกเปลี่ยนภายหลัง จึงไม่ลบหรือเขียนทับไฟล์นั้น");
+                    changes.Add(new FileChange(localized, null));
+                }
                 ApplyChanges(changes, backupDirectory);
                 return new OperationResult {
                     TargetPath = target, BackupPath = System.IO.Path.Combine(backupDirectory, "ArcaneMP_launcher.json"),
@@ -231,6 +241,8 @@ namespace ArcaneThai
             public string Path;
             public byte[] Before;
             public byte[] After;
+            public string LinkSource;
+            public bool WasLinked;
             public FileChange(string path, byte[] after) { Path = path; After = after; }
         }
 
@@ -324,18 +336,27 @@ namespace ArcaneThai
 
         private static void ApplyChanges(List<FileChange> changes, string backupDirectory)
         {
+            string root = System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(backupDirectory));
             foreach (FileChange change in changes) {
                 if (File.Exists(change.Path)) AssertWritableAndClosed(change.Path);
                 change.Before = ReadOptional(change.Path);
-                if (change.Before != null) File.WriteAllBytes(System.IO.Path.Combine(backupDirectory, System.IO.Path.GetFileName(change.Path)), change.Before);
+                change.WasLinked = change.LinkSource != null && ModStorage.SameFile(change.Path, change.LinkSource);
+                if (change.Before != null) {
+                    string relative = System.IO.Path.GetFullPath(change.Path).Substring(root.Length + 1);
+                    string backupPath = System.IO.Path.Combine(backupDirectory, relative);
+                    Directory.CreateDirectory(System.IO.Path.GetDirectoryName(backupPath));
+                    File.WriteAllBytes(backupPath, change.Before);
+                }
             }
             var applied = new List<FileChange>();
             try {
                 foreach (FileChange change in changes) {
                     if (!Same(ReadOptional(change.Path), change.Before)) throw new IOException("ไฟล์ถูกแก้ไขระหว่างทำงาน โปรดตรวจไฟล์อีกครั้ง");
-                    WriteAtomic(change.Path, change.After);
+                    if (change.LinkSource != null) WriteLink(change.Path, change.LinkSource, change.After);
+                    else WriteAtomic(change.Path, change.After);
                     applied.Add(change);
-                    if (!Same(ReadOptional(change.Path), change.After)) throw new IOException("ตรวจไฟล์หลังบันทึกไม่ผ่าน");
+                    if (!Same(ReadOptional(change.Path), change.After) || (change.LinkSource != null && !ModStorage.SameFile(change.Path, change.LinkSource)))
+                        throw new IOException("ตรวจไฟล์หรือจุดโหลดหลังบันทึกไม่ผ่าน");
                 }
             } catch {
                 applied.Reverse();
@@ -343,8 +364,22 @@ namespace ArcaneThai
                     if (!Same(ReadOptional(change.Path), change.After)) throw new IOException("มีโปรแกรมอื่นแก้ไฟล์ระหว่างคืนค่า โปรดใช้ไฟล์สำรองใน " + backupDirectory);
                     WriteAtomic(change.Path, change.Before);
                 }
+                foreach (FileChange change in applied.Where(value => value.WasLinked)) WriteLink(change.Path, change.LinkSource, change.Before);
                 throw;
             }
+        }
+
+        private static void WriteLink(string path, string source, byte[] expected)
+        {
+            if (!Same(ReadOptional(source), expected)) throw new IOException("DLL ต้นทางของลิงก์ถูกเปลี่ยนระหว่างทำงาน");
+            string stage = path + "." + Guid.NewGuid().ToString("N") + ".arcane-thai-stage";
+            try {
+                // Prepare the link before touching the previous loader. File.Replace keeps
+                // the source file identity and preserves the original loaded-module folder.
+                ModStorage.Link(stage, source);
+                if (File.Exists(path)) File.Replace(stage, path, null, true);
+                else File.Move(stage, path);
+            } finally { if (File.Exists(stage)) File.Delete(stage); }
         }
 
         private static void WriteAtomic(string path, byte[] bytes)
