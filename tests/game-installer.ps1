@@ -37,7 +37,8 @@ $before = Invoke-Game '--game-inspect' $client 'arcanemp'
 Assert-True (-not $before.IsInstalled -and -not $before.HasConflict) 'Detect a client without a game translation'
 $installed = Invoke-Game '--game-install' $client 'arcanemp'
 Assert-True ($installed.Changed -and (Hash $installed.TargetPath) -eq $expected) 'Install the embedded PAK into the selected client'
-Assert-True ($installed.TargetPath -eq (Join-Path $client 'files/paks/zArcaneThai_Community_P.pak')) 'ArcaneMP mode uses the client PAK scan folder'
+Assert-True ($installed.TargetPath -eq (Join-Path $client 'mods/ArcaneThai/zArcaneThai_Community_P.pak')) 'ArcaneMP mode stores the pack in the mods folder'
+Assert-True ($installed.LoaderPath -eq (Join-Path $client 'files/paks/zArcaneThai_Community_P.pak') -and (Invoke-Game '--game-inspect' $client 'arcanemp').LoaderLinked) 'The native scan path is a hard link to the same file in mods'
 Assert-True ((Hash (Join-Path $client 'ArcaneMPClient.dll')) -eq $realHash.ToLowerInvariant()) 'Game translation leaves the official client DLL unchanged'
 Assert-True ((Hash $config) -eq $configHash -and (Hash $manifest) -eq $manifestHash) 'Game translation leaves launcher settings and updater manifest unchanged'
 $again = Invoke-Game '--game-install' $client 'arcanemp'
@@ -47,6 +48,7 @@ $otherPak = Join-Path $client 'files/paks/OtherMod.pak'
 [IO.File]::WriteAllText($otherPak, 'another mod')
 $removed = Invoke-Game '--game-uninstall' $client 'arcanemp'
 Assert-True (-not (Test-Path -LiteralPath $installed.TargetPath) -and (Hash $removed.BackupPath) -eq $expected) 'Uninstall moves the exact owned pack into a backup'
+Assert-True (-not (Test-Path -LiteralPath $installed.LoaderPath)) 'Uninstall also removes the owned loader hard link'
 Assert-True ([IO.File]::ReadAllText($otherPak) -eq 'another mod') 'Uninstall preserves unrelated mods'
 Assert-True (-not (Invoke-Game '--game-uninstall' $client 'arcanemp').Changed) 'Repeated uninstall is harmless'
 
@@ -57,6 +59,11 @@ $null = Invoke-Game '--game-install' $client 'arcanemp' $false
 $null = Invoke-Game '--game-uninstall' $client 'arcanemp' $false
 Assert-True ((Hash $installed.TargetPath) -eq $foreignHash) 'Install and uninstall never overwrite or remove a different PAK'
 Remove-Item -LiteralPath $installed.TargetPath
+
+[IO.File]::WriteAllText($installed.LoaderPath, 'another mod owns the loader filename')
+$null = Invoke-Game '--game-install' $client 'arcanemp' $false
+Assert-True (-not (Test-Path -LiteralPath $installed.TargetPath) -and [IO.File]::ReadAllText($installed.LoaderPath) -eq 'another mod owns the loader filename') 'A foreign file at the loader path is preserved'
+Remove-Item -LiteralPath $installed.LoaderPath
 
 # Compile a harmless executable with the real game filename to test the process guard.
 $helperSource = Join-Path $testRoot 'GameFixture.cs'

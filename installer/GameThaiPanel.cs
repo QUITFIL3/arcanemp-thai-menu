@@ -167,7 +167,7 @@ namespace ArcaneThai
                 if (IsDisposed || selectedRevision != revision) return;
                 inspection = result;
                 UpdateButtons();
-                SetStatus(result.HasConflict ? "มีแพ็กอื่นใช้ชื่อเดียวกัน" : result.IsInstalled ? "ติดตั้งแพ็กตัวเกมไว้แล้ว" : "พร้อมติดตั้งภาษาไทยตัวเกม", result.Message, result.HasConflict, result.IsInstalled);
+                SetStatus(result.HasConflict ? "มีแพ็กอื่นใช้ชื่อเดียวกัน" : result.IsInstalled ? "ติดตั้งแพ็กตัวเกมไว้แล้ว" : result.NeedsMigration ? "พร้อมย้ายแพ็กเข้าโฟลเดอร์ mods" : "พร้อมติดตั้งภาษาไทยตัวเกม", result.Message, result.HasConflict, result.IsInstalled);
             } catch (Exception error) {
                 if (IsDisposed || selectedRevision != revision) return;
                 inspection = null; install.Enabled = uninstall.Enabled = false;
@@ -178,7 +178,8 @@ namespace ArcaneThai
         private void UpdateButtons()
         {
             install.Enabled = inspection != null && !inspection.IsInstalled && !inspection.HasConflict;
-            uninstall.Enabled = inspection != null && inspection.IsInstalled;
+            uninstall.Enabled = inspection != null && inspection.CanUninstall;
+            install.Text = inspection != null && inspection.NeedsMigration ? "ย้ายแพ็กเข้า mods" : "ติดตั้งภาษาไทยตัวเกม";
         }
 
         private async Task Change(bool removing)
@@ -221,7 +222,7 @@ namespace ArcaneThai
             mode.SelectedIndex = direct ? 1 : 0;
             location.Text = direct ? @"D:\Epic Games\Hogwarts Legacy" : @"F:\ArcaneMP";
             install.Enabled = true;
-            SetStatus("พร้อมติดตั้งภาษาไทยตัวเกม", direct ? "ติดตั้งแพ็กเสริมลงโฟลเดอร์เกมที่เลือก สำหรับเปิดเกมปกติด้วย" : "ติดตั้งใน client นี้ ใช้แปลตัวเกมเมื่อเปิดผ่าน ArcaneMP", false, false);
+            SetStatus("พร้อมติดตั้งภาษาไทยตัวเกม", direct ? "ติดตั้งแพ็กเสริมลงโฟลเดอร์เกมที่เลือก สำหรับเปิดเกมปกติด้วย" : "เก็บแพ็กใน mods\\ArcaneThai และเชื่อมให้ ArcaneMP โหลดไฟล์เดียวกัน", false, false);
         }
 
         protected override void Dispose(bool disposing) { if (disposing) debounce.Dispose(); base.Dispose(disposing); }

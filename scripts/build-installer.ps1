@@ -25,6 +25,7 @@ $arguments += '/resource:' + (Join-Path $repoRoot 'assets/OFL-NotoSansThai.txt')
 $arguments += '/resource:' + $GamePackPath + ',ArcaneThai.GamePak'
 $arguments += '/resource:' + (Join-Path $repoRoot 'assets/GAME-CREDITS.txt') + ',ArcaneThai.GameCredits'
 $arguments += Join-Path $repoRoot 'installer/PatchEngine.cs'
+$arguments += Join-Path $repoRoot 'installer/ModStorage.cs'
 $arguments += Join-Path $repoRoot 'installer/GameThaiEngine.cs'
 $arguments += Join-Path $repoRoot 'installer/GameThaiPanel.cs'
 $arguments += Join-Path $repoRoot 'installer/Program.cs'

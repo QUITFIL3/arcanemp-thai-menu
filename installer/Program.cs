@@ -8,8 +8,8 @@ using System.Windows.Forms;
 
 [assembly: AssemblyTitle("ArcaneMP Thai Menu Installer")]
 [assembly: AssemblyDescription("Thai installer for ArcaneMP menus and Hogwarts Legacy game text")]
-[assembly: AssemblyVersion("0.4.0.0")]
-[assembly: AssemblyFileVersion("0.4.0.0")]
+[assembly: AssemblyVersion("0.5.0.0")]
+[assembly: AssemblyFileVersion("0.5.0.0")]
 
 namespace ArcaneThai
 {
@@ -86,7 +86,7 @@ namespace ArcaneThai
 
         public InstallerForm()
         {
-            Text = "ตัวติดตั้งภาษาไทย ArcaneMP และ Hogwarts Legacy 0.4.0";
+            Text = "ตัวติดตั้งภาษาไทย ArcaneMP และ Hogwarts Legacy 0.5.0";
             ClientSize = new Size(820, 640);
             MinimumSize = new Size(780, 650);
             StartPosition = FormStartPosition.CenterScreen;
@@ -123,7 +123,7 @@ namespace ArcaneThai
             };
             layout.Controls.Add(title, 0, 0);
             layout.Controls.Add(new Label {
-                Text = "เลือกโฟลเดอร์ client หรือไฟล์ ArcaneMP\nติดตั้งภาษาไทยแยกไฟล์ โดยเก็บ DLL ทางการไว้สำหรับตัวอัปเดต",
+                Text = "เลือกโฟลเดอร์ client หรือไฟล์ ArcaneMP\nเก็บมอดภาษาไทยใน mods\\ArcaneThai พร้อมคง DLL ทางการไว้",
                 Dock = DockStyle.Fill, ForeColor = Muted, Margin = new Padding(0, 4, 0, 0)
             }, 0, 1);
             layout.Controls.Add(new Label {
@@ -261,8 +261,8 @@ namespace ArcaneThai
                 install.Enabled = !result.IsInstalled;
                 restore.Enabled = result.CanRestore;
                 install.Text = result.IsInstalled ? "ติดตั้งแล้ว" : "ติดตั้งภาษาไทย";
-                SetStatus(result.IsInstalled ? "ติดตั้งภาษาไทยชุดนี้แล้ว" : result.NeedsRefresh ? "พร้อมปรับภาษาไทยให้ตรงกับ client" : "พร้อมติดตั้งภาษาไทย",
-                    result.IsInstalled ? "เปิด ArcaneMP ใหม่ได้ หลังอัปเดต client ให้ติดตั้งภาษาไทยซ้ำ" : "ใช้ DLL ภาษาไทยแยกไฟล์ พร้อมสำรองการตั้งค่า Launcher", false, result.IsInstalled);
+                SetStatus(result.IsInstalled ? "ติดตั้งภาษาไทยชุดนี้แล้ว" : result.NeedsRefresh ? "พร้อมปรับหรือย้ายเมนูภาษาไทย" : "พร้อมติดตั้งภาษาไทย",
+                    result.IsInstalled ? "โหลดจาก mods\\ArcaneThai หลังอัปเดต client ให้ติดตั้งภาษาไทยซ้ำ" : "เก็บ DLL แปลใน mods\\ArcaneThai และสำรองการตั้งค่า Launcher", false, result.IsInstalled);
             } catch (Exception error) {
                 if (IsDisposed || selectedRevision != revision) return;
                 inspection = null;
@@ -318,7 +318,7 @@ namespace ArcaneThai
             Location = new Point(-20000, -20000);
             location.Text = @"F:\ArcaneMP\ArcaneMPClient.dll";
             install.Enabled = true;
-            SetStatus("พร้อมติดตั้งภาษาไทย", "ใช้ DLL ภาษาไทยแยกไฟล์ พร้อมสำรองการตั้งค่า Launcher", false, false);
+            SetStatus("พร้อมติดตั้งภาษาไทย", "เก็บ DLL แปลใน mods\\ArcaneThai และสำรองการตั้งค่า Launcher", false, false);
             if (section == "game" || section == "game-direct") { gamePage.RenderPreview(section == "game-direct"); sections.SelectedIndex = 1; }
             Show();
             Application.DoEvents();

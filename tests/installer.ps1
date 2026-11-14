@@ -91,7 +91,7 @@ foreach ($fixture in $fixtures) {
     Assert-True ($manifest.files[0].sha256 -eq $beforeHash.ToLowerInvariant()) 'Official DLL still matches the updater checksum after installation'
     $configPath = Join-Path $directory 'ArcaneMP_launcher.json'
     $config = Get-Content -Raw -LiteralPath $configPath | ConvertFrom-Json
-    Assert-True ($config.mod_dll_name -eq 'ArcaneMPClient.Thai.dll' -and $config.custom.keep -eq 42 -and $config.game_path_manual) 'Only the intended launcher setting changes; custom fields survive'
+    Assert-True ($config.mod_dll_name -eq 'mods\ArcaneThai\ArcaneMPClient.Thai.dll' -and $config.custom.keep -eq 42 -and $config.game_path_manual) 'Launcher loads from mods while custom settings survive'
     $second = Invoke-Installer '--install' $fixture
     Assert-True (-not $second.Changed) 'Repeated install is idempotent'
     $inspectInstalled = Invoke-Installer '--inspect' $fixture
@@ -141,9 +141,9 @@ $configLock = Join-Path (Split-Path -Parent $fixtures[0]) 'ArcaneMP_launcher.jso
 $configStream = [IO.File]::Open($configLock,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
 try { $null = Invoke-Installer '--install' $fixtures[0] $false }
 finally { $configStream.Dispose() }
-Assert-True (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $fixtures[0]) 'ArcaneMPClient.Thai.dll'))) 'A locked launcher config leaves no partial installation'
+Assert-True (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $fixtures[0]) 'mods/ArcaneThai/ArcaneMPClient.Thai.dll'))) 'A locked launcher config leaves no partial installation'
 
-$collision = Join-Path (Split-Path -Parent $fixtures[0]) 'ArcaneMPClient.Thai.dll'
+$collision = Join-Path (Split-Path -Parent $fixtures[0]) 'mods/ArcaneThai/ArcaneMPClient.Thai.dll'
 [IO.File]::WriteAllText($collision, 'unrelated user file')
 $collisionHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $collision).Hash
 $null = Invoke-Installer '--install' $fixtures[0] $false
@@ -155,7 +155,7 @@ $unverifiedBytes = [IO.File]::ReadAllBytes($unverified)
 $unverifiedBytes[200] = $unverifiedBytes[200] -bxor 1
 [IO.File]::WriteAllBytes($unverified, $unverifiedBytes)
 $null = Invoke-Installer '--install' $unverified $false
-Assert-True (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $unverified) 'ArcaneMPClient.Thai.dll'))) 'A changed official file that is not our legacy patch is rejected'
+Assert-True (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $unverified) 'mods/ArcaneThai/ArcaneMPClient.Thai.dll'))) 'A changed official file that is not our legacy patch is rejected'
 
 $duplicate = New-Fixture 'หลายหน้าเมนู' '3.4.5.6' 71 ([byte[]]($htmlBytes + [byte]0 + $htmlBytes))
 $duplicateBefore = (Get-FileHash -Algorithm SHA256 -LiteralPath $duplicate).Hash

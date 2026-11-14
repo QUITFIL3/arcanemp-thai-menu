@@ -9,9 +9,13 @@ namespace ArcaneThai
     {
         public string RootPath;
         public string TargetPath;
+        public string LoaderPath;
         public string Mode;
         public bool IsInstalled;
         public bool HasConflict;
+        public bool LoaderLinked;
+        public bool CanUninstall;
+        public bool NeedsMigration;
         public string Message;
         public int ThaiEntries = 40520;
         public int TotalEntries = 56112;
@@ -20,6 +24,7 @@ namespace ArcaneThai
     public sealed class GameThaiResult
     {
         public string TargetPath;
+        public string LoaderPath;
         public string BackupPath;
         public string Sha256;
         public bool Changed;
@@ -59,15 +64,21 @@ namespace ArcaneThai
         {
             string root = ResolveRoot(selected, mode);
             string target = mode == "arcanemp"
-                ? Path.Combine(root, "files", "paks", PakName)
+                ? Path.Combine(ModStorage.DirectoryFor(root), PakName)
                 : Path.Combine(root, "Phoenix", "Content", "Paks", "~mods", PakName);
-            bool exists = File.Exists(target);
-            bool installed = exists && new FileInfo(target).Length == ExpectedBytes && HashFile(target) == ExpectedSha256;
+            string loader = mode == "arcanemp" ? Path.Combine(root, "files", "paks", PakName) : target;
+            bool owned = IsOwned(target), loaderOwned = IsOwned(loader);
+            bool conflict = (File.Exists(target) && !owned) || (File.Exists(loader) && !loaderOwned);
+            bool linked = owned && loaderOwned && (mode == "game" || ModStorage.SameFile(target, loader));
+            bool installed = !conflict && linked;
+            bool migrating = mode == "arcanemp" && !conflict && !installed && (owned || loaderOwned);
             return new GameThaiInspection {
-                RootPath = root, TargetPath = target, Mode = mode, IsInstalled = installed, HasConflict = exists && !installed,
-                Message = exists && !installed ? "มีแพ็กชื่อเดียวกันที่เนื้อหาต่างจากชุดนี้ จึงไม่เขียนทับ โปรดเก็บไฟล์นั้นแยกไว้ก่อน"
+                RootPath = root, TargetPath = target, LoaderPath = loader, Mode = mode, IsInstalled = installed, HasConflict = conflict,
+                LoaderLinked = linked, CanUninstall = !conflict && (owned || loaderOwned), NeedsMigration = migrating,
+                Message = conflict ? "มีแพ็กชื่อเดียวกันที่เนื้อหาต่างจากชุดนี้ จึงไม่เขียนทับ โปรดเก็บไฟล์นั้นแยกไว้ก่อน"
+                    : migrating ? "พร้อมย้ายหรือเชื่อมแพ็กเดิมให้โหลดจาก mods\\ArcaneThai"
                     : installed ? "พบแพ็กภาษาไทยชุดนี้แล้ว เลือกถอนแพ็กได้โดยเก็บสำเนาไว้"
-                    : mode == "arcanemp" ? "ติดตั้งใน client นี้ ใช้แปลตัวเกมเมื่อเปิดผ่าน ArcaneMP"
+                    : mode == "arcanemp" ? "เก็บแพ็กใน mods\\ArcaneThai และเชื่อมให้ ArcaneMP โหลดไฟล์เดียวกัน"
                     : "ติดตั้งเป็นแพ็กเสริมในโฟลเดอร์เกม ใช้กับ Steam หรือ Epic ได้ตามโครงสร้างที่รองรับ"
             };
         }
@@ -78,8 +89,40 @@ namespace ArcaneThai
             AssertClosed(info);
             if (info.HasConflict) throw new InvalidOperationException(info.Message);
             if (info.IsInstalled) return new GameThaiResult {
-                TargetPath = info.TargetPath, Sha256 = ExpectedSha256, Changed = false, Message = "ติดตั้งแพ็กภาษาไทยตัวเกมชุดนี้ไว้แล้ว"
+                TargetPath = info.TargetPath, LoaderPath = info.LoaderPath, Sha256 = ExpectedSha256, Changed = false, Message = "ติดตั้งแพ็กภาษาไทยตัวเกมชุดนี้ไว้แล้ว"
             };
+            bool createdPrimary = false, createdLink = false;
+            string priorLoaderBackup = null;
+            try {
+                if (!File.Exists(info.TargetPath)) { WritePack(info); createdPrimary = true; }
+                if (mode == "arcanemp") {
+                    ModStorage.EnsureDirectory(info.RootPath, Path.GetDirectoryName(info.LoaderPath));
+                    AssertClosed(info);
+                    if (File.Exists(info.LoaderPath)) {
+                        if (!IsOwned(info.LoaderPath)) throw new IOException("ไฟล์จุดโหลดถูกแก้ไขระหว่างทำงาน");
+                        priorLoaderBackup = NewBackupPath(info.RootPath, "migrated");
+                        File.Move(info.LoaderPath, priorLoaderBackup);
+                    }
+                    ModStorage.Link(info.LoaderPath, info.TargetPath);
+                    createdLink = true;
+                    if (!ModStorage.SameFile(info.LoaderPath, info.TargetPath)) throw new IOException("ลิงก์ไม่ได้ชี้ไปยังแพ็กใน mods");
+                }
+                if (!IsOwned(info.TargetPath) || !IsOwned(info.LoaderPath)) throw new IOException("ตรวจแพ็กหลังติดตั้งไม่ผ่าน");
+            } catch {
+                if (createdLink && ModStorage.SameFile(info.LoaderPath, info.TargetPath)) File.Delete(info.LoaderPath);
+                if (priorLoaderBackup != null && !File.Exists(info.LoaderPath)) File.Move(priorLoaderBackup, info.LoaderPath);
+                if (createdPrimary && IsOwned(info.TargetPath)) File.Delete(info.TargetPath);
+                throw;
+            }
+            return new GameThaiResult {
+                TargetPath = info.TargetPath, LoaderPath = info.LoaderPath, BackupPath = priorLoaderBackup, Sha256 = ExpectedSha256, Changed = true,
+                Message = mode == "arcanemp" ? "ติดตั้งใน mods\\ArcaneThai และเชื่อมจุดโหลดแล้ว ใช้ภาษา English และเปิด ArcaneMP ใหม่"
+                    : "ติดตั้งแพ็กตัวเกมแล้ว ใช้ภาษา English ของเกม และเปิดเกมใหม่"
+            };
+        }
+
+        private static void WritePack(GameThaiInspection info)
+        {
             byte[] bytes = Resource("ArcaneThai.GamePak");
             if (bytes.Length != ExpectedBytes || PatchEngine.Hash(bytes) != ExpectedSha256)
                 throw new InvalidDataException("แพ็กภาษาไทยในตัวติดตั้งตรวจสอบไม่ผ่าน กรุณาดาวน์โหลด EXE ใหม่");
@@ -97,10 +140,6 @@ namespace ArcaneThai
                 File.Move(stage, info.TargetPath);
             } finally { if (File.Exists(stage)) File.Delete(stage); }
             if (HashFile(info.TargetPath) != ExpectedSha256) throw new IOException("ตรวจแพ็กหลังติดตั้งไม่ผ่าน");
-            return new GameThaiResult {
-                TargetPath = info.TargetPath, Sha256 = ExpectedSha256, Changed = true,
-                Message = "ติดตั้งแพ็กตัวเกมแล้ว ใช้ภาษา English ของเกม และเปิดเกมใหม่" + (mode == "arcanemp" ? "ผ่าน ArcaneMP" : "")
-            };
         }
 
         public static GameThaiResult Uninstall(string selected, string mode)
@@ -108,23 +147,30 @@ namespace ArcaneThai
             GameThaiInspection info = Inspect(selected, mode);
             AssertClosed(info);
             if (info.HasConflict) throw new InvalidOperationException("แพ็กถูกเปลี่ยนภายหลัง จึงไม่ย้ายหรือถอนไฟล์นั้น");
-            if (!info.IsInstalled) return new GameThaiResult { TargetPath = info.TargetPath, Changed = false, Message = "ไม่พบแพ็กภาษาไทยชุดนี้ในตำแหน่งที่เลือก" };
-            string directory = Path.Combine(info.RootPath, "thai-pack-backups", "disabled-" + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + "-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            if (!info.CanUninstall) return new GameThaiResult { TargetPath = info.TargetPath, LoaderPath = info.LoaderPath, Changed = false, Message = "ไม่พบแพ็กภาษาไทยชุดนี้ในตำแหน่งที่เลือก" };
             AssertNoReparsePoints(info.RootPath, Path.GetDirectoryName(info.TargetPath));
-            AssertNoReparsePoints(info.RootPath, directory);
-            Directory.CreateDirectory(directory);
-            string backup = Path.Combine(directory, PakName);
-            using (var file = new FileStream(info.TargetPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
-                if (file.Length != ExpectedBytes) throw new IOException("แพ็กถูกเปลี่ยนระหว่างทำงาน");
-                using (var sha = System.Security.Cryptography.SHA256.Create()) {
-                    string hash = BitConverter.ToString(sha.ComputeHash(file)).Replace("-", "").ToLowerInvariant();
-                    if (hash != ExpectedSha256) throw new IOException("แพ็กถูกเปลี่ยนระหว่างทำงาน");
-                }
-            }
-            File.Move(info.TargetPath, backup);
+            AssertNoReparsePoints(info.RootPath, Path.GetDirectoryName(info.LoaderPath));
+            string backup = NewBackupPath(info.RootPath, "disabled");
+            string source = IsOwned(info.TargetPath) ? info.TargetPath : info.LoaderPath;
+            File.Copy(source, backup);
             if (HashFile(backup) != ExpectedSha256) throw new IOException("แพ็กถูกแก้ไขระหว่างทำงาน เก็บไฟล์ที่ย้ายไว้ที่ " + backup);
-            return new GameThaiResult { TargetPath = info.TargetPath, BackupPath = backup, Sha256 = ExpectedSha256, Changed = true, Message = "ถอนแพ็กตัวเกมแล้ว และเก็บไฟล์ไว้ใน thai-pack-backups" };
+            AssertClosed(info);
+            if ((File.Exists(info.TargetPath) && !IsOwned(info.TargetPath)) || (File.Exists(info.LoaderPath) && !IsOwned(info.LoaderPath)))
+                throw new IOException("แพ็กถูกเปลี่ยนระหว่างทำงาน เก็บสำเนาเดิมไว้ที่ " + backup);
+            if (info.LoaderPath != info.TargetPath && File.Exists(info.LoaderPath)) File.Delete(info.LoaderPath);
+            if (File.Exists(info.TargetPath)) File.Delete(info.TargetPath);
+            return new GameThaiResult { TargetPath = info.TargetPath, LoaderPath = info.LoaderPath, BackupPath = backup, Sha256 = ExpectedSha256, Changed = true, Message = "ถอนแพ็กตัวเกมและลิงก์โหลดแล้ว เก็บไฟล์ไว้ใน thai-pack-backups" };
         }
+
+        private static string NewBackupPath(string root, string prefix)
+        {
+            string directory = Path.Combine(root, "thai-pack-backups", prefix + "-" + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + "-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            AssertNoReparsePoints(root, directory);
+            Directory.CreateDirectory(directory);
+            return Path.Combine(directory, PakName);
+        }
+
+        private static bool IsOwned(string path) { return File.Exists(path) && new FileInfo(path).Length == ExpectedBytes && HashFile(path) == ExpectedSha256; }
 
         private static void AssertClosed(GameThaiInspection info)
         {
@@ -151,8 +197,9 @@ namespace ArcaneThai
                     }
                 }
             }
-            if (File.Exists(info.TargetPath)) {
-                try { using (var file = new FileStream(info.TargetPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { } }
+            foreach (string target in new[] { info.TargetPath, info.LoaderPath }) {
+                if (!File.Exists(target)) continue;
+                try { using (var file = new FileStream(target, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { } }
                 catch (IOException) { throw new IOException("แพ็กกำลังใช้งานอยู่ โปรดปิดเกมก่อนทำต่อ"); }
             }
         }
